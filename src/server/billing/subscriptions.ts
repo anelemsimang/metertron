@@ -1,19 +1,49 @@
-import { asc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { METERTRON_PLAN, METERTRON_PLAN_KEY, TRIAL_DAYS } from "@/server/billing/plans";
+import { recoverOrganisation } from "@/server/billing/dunning";
 import { annualFromMonthly, formatZarFromCents, vatFromExclusive } from "@/server/billing/vat";
 import { getDb } from "@/server/db/client";
-import {
-  invoices,
-  organisationSubscriptions,
-  organisations,
-  plans,
-} from "@/server/db/schema";
-import { recoverOrganisation } from "@/server/billing/dunning";
+import { invoices, organisationSubscriptions, organisations, plans } from "@/server/db/schema";
 
-export async function listPublicPlans() {
-  return getDb().select().from(plans).where(eq(plans.isPublic, true)).orderBy(asc(plans.sortOrder));
+export async function ensureMetertronPlan() {
+  await getDb()
+    .insert(plans)
+    .values({
+      key: METERTRON_PLAN.key,
+      name: METERTRON_PLAN.name,
+      description: METERTRON_PLAN.description,
+      amountMonthlyZarCents: METERTRON_PLAN.amountMonthlyZarCents,
+      seatLimit: null,
+      installsPerMonth: null,
+      storageBytes: null,
+      isPublic: true,
+      sortOrder: 0,
+    })
+    .onConflictDoUpdate({
+      target: plans.key,
+      set: {
+        name: METERTRON_PLAN.name,
+        description: METERTRON_PLAN.description,
+        amountMonthlyZarCents: METERTRON_PLAN.amountMonthlyZarCents,
+        seatLimit: null,
+        installsPerMonth: null,
+        storageBytes: null,
+        isPublic: true,
+        sortOrder: 0,
+        updatedAt: new Date(),
+      },
+    });
 }
 
+export async function getMetertronPlan() {
+  await ensureMetertronPlan();
+  const [plan] = await getDb().select().from(plans).where(eq(plans.key, METERTRON_PLAN_KEY)).limit(1);
+  return plan;
+}
+
+/** Trial uses the same Metertron plan; status stays trialing until paid. */
 export async function ensureTrialSubscription(organisationId: string) {
+  await ensureMetertronPlan();
   const db = getDb();
   const [existing] = await db
     .select({ id: organisationSubscriptions.id })
@@ -23,12 +53,12 @@ export async function ensureTrialSubscription(organisationId: string) {
   if (existing) return existing;
 
   const trialEnds = new Date();
-  trialEnds.setDate(trialEnds.getDate() + 14);
+  trialEnds.setDate(trialEnds.getDate() + TRIAL_DAYS);
   const [row] = await db
     .insert(organisationSubscriptions)
     .values({
       organisationId,
-      planKey: "trial",
+      planKey: METERTRON_PLAN_KEY,
       interval: "monthly",
       status: "trialing",
       currentPeriodStart: new Date(),
@@ -43,25 +73,20 @@ export async function getBillingOverview(organisationId: string) {
   const [org] = await db.select().from(organisations).where(eq(organisations.id, organisationId)).limit(1);
   if (!org) return null;
   await ensureTrialSubscription(organisationId);
+  const plan = await getMetertronPlan();
   const [subscription] = await db
     .select()
     .from(organisationSubscriptions)
     .where(eq(organisationSubscriptions.organisationId, organisationId))
     .limit(1);
-  const [plan] = await db.select().from(plans).where(eq(plans.key, org.planKey)).limit(1);
-  const planRows = await listPublicPlans();
-  const invoiceRows = await db
-    .select()
-    .from(invoices)
-    .where(eq(invoices.organisationId, organisationId))
-    .orderBy(asc(invoices.createdAt));
+  const invoiceRows = await db.select().from(invoices).where(eq(invoices.organisationId, organisationId));
 
   return {
     organisation: {
       id: org.id,
       name: org.name,
       status: org.status,
-      planKey: org.planKey,
+      planKey: METERTRON_PLAN_KEY,
       trialEndsAt: org.trialEndsAt,
       vatNumber: org.vatNumber,
       vatRateBps: org.vatRateBps,
@@ -69,28 +94,24 @@ export async function getBillingOverview(organisationId: string) {
     },
     subscription,
     plan,
-    plans: planRows,
     invoices: invoiceRows,
   };
 }
 
-export async function createPlanInvoice(
+export async function createSubscriptionInvoice(
   organisationId: string,
-  input: { planKey: string; interval: "monthly" | "annual"; paystackReference?: string },
+  input: { interval: "monthly" | "annual"; paystackReference?: string },
 ) {
   const db = getDb();
   const [org] = await db.select().from(organisations).where(eq(organisations.id, organisationId)).limit(1);
   if (!org) throw new Error("Organisation not found.");
-  const [plan] = await db.select().from(plans).where(eq(plans.key, input.planKey)).limit(1);
-  if (!plan) throw new Error("Unknown plan.");
-  if (plan.amountMonthlyZarCents == null) throw new Error("Contact us for Enterprise pricing.");
+  const plan = await getMetertronPlan();
+  if (!plan?.amountMonthlyZarCents) throw new Error("Metertron plan is not priced.");
 
   const subtotal =
     input.interval === "annual" ? annualFromMonthly(plan.amountMonthlyZarCents) : plan.amountMonthlyZarCents;
   const taxed = vatFromExclusive(subtotal, org.vatRateBps);
-  const count = (
-    await db.select().from(invoices).where(eq(invoices.organisationId, organisationId))
-  ).length;
+  const count = (await db.select().from(invoices).where(eq(invoices.organisationId, organisationId))).length;
   const number = `INV-${org.slug.toUpperCase().slice(0, 8)}-${String(count + 1).padStart(4, "0")}`;
 
   const [invoice] = await db
@@ -108,7 +129,7 @@ export async function createPlanInvoice(
       paystackReference: input.paystackReference,
       lineItems: [
         {
-          description: `${plan.name} (${input.interval})`,
+          description: `Metertron subscription (${input.interval})`,
           amountZarCents: taxed.subtotalZarCents,
           quantity: 1,
         },
@@ -125,7 +146,7 @@ export async function createPlanInvoice(
   return { invoice, plan, display: formatZarFromCents(taxed.totalZarCents) };
 }
 
-export async function markInvoicePaid(organisationId: string, reference: string, planKey: string, interval: "monthly" | "annual") {
+export async function markInvoicePaid(organisationId: string, reference: string, interval: "monthly" | "annual") {
   const db = getDb();
   const [invoice] = await db
     .update(invoices)
@@ -139,7 +160,7 @@ export async function markInvoicePaid(organisationId: string, reference: string,
   await db
     .update(organisationSubscriptions)
     .set({
-      planKey,
+      planKey: METERTRON_PLAN_KEY,
       interval,
       status: "active",
       currentPeriodStart: new Date(),
@@ -149,6 +170,6 @@ export async function markInvoicePaid(organisationId: string, reference: string,
     })
     .where(eq(organisationSubscriptions.organisationId, organisationId));
 
-  await recoverOrganisation(organisationId, planKey);
+  await recoverOrganisation(organisationId, METERTRON_PLAN_KEY);
   return invoice ?? null;
 }

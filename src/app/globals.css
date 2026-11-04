@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../styles/tokens.css";
+@import "../styles/marketing.css";
 
 @theme inline {
   --font-sans: var(--font-sans), Inter, sans-serif;

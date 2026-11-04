@@ -1,5 +1,6 @@
 import { DatabaseNotice } from "@/components/office/database-notice";
 import { InvitePanel } from "@/components/office/invite-panel";
+import { SupportAccessList } from "@/components/office/support-access-list";
 import { TeamList } from "@/components/office/team-list";
 import { SectionTitle } from "@/components/section-title";
 import { getSessionUser } from "@/server/auth/session";
@@ -21,6 +22,7 @@ export default async function Page() {
           </p>
         </div>
         {canInvite ? <InvitePanel /> : null}
+        <SupportAccessList />
         <TeamList
           people={people}
           currentUserId={user?.id ?? ""}

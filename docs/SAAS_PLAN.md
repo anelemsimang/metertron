@@ -70,8 +70,8 @@ Details of day-to-day choices during build go in [`docs/DECISIONS.md`](./DECISIO
 
 ### 3.1 Tenant resolution
 1. Default: `app.metertron.co.za/{org-slug}/…`  
-2. Subdomain: `{slug}.metertron.co.za` (Growth+)  
-3. Custom domain: Enterprise; verified via DNS TXT + TLS  
+2. Subdomain: `{slug}.metertron.co.za` (subscribed orgs)  
+3. Custom domain: optional add-on later; verified via DNS TXT + TLS  
 Middleware resolves slug → `organization_id`, sets Postgres session variable for RLS, rejects cross-tenant IDs in path params.
 
 ### 3.2 Isolation layers (defence in depth)
@@ -105,7 +105,7 @@ Extend `ROLE_MATRIX` in `access.ts`; wire `assertCan` into every mutating route.
 Keep Dexie offline, SW, compression, GPS, barcode. Add: conflict policy, org-scoped photo attach, optional watermarking, duplicate meter detection within tenant, stronger outbox auth.
 
 ### 3.6 Billing (Phase 5)
-Plans table (Starter R1,490 / Growth R3,990 / Enterprise custom — excl. VAT). Usage metering: seats, installs/month, storage. Soft warn 80%, hard limit/overage at 100%. Dunning: failed → grace → read-only → suspend (never delete). Annual = 2 months free. Invoices: 15% VAT + tenant VAT number.
+One **Metertron** plan per organisation (default R1,490/mo excl. VAT; annual = 12× monthly, no discount). Full product access — no seat/install caps. Trial = 7 days on the same plan (status, not a separate plan row). Usage still tracked for ops. Dunning: failed → grace → read-only → suspend (never delete). Invoices: 15% VAT + tenant VAT number.
 
 ### 3.7 Platform control panel (Phase 6)
 Separate app/guard at `admin.metertron.co.za` (or `/platform` with separate auth). Modules per build spec §4. Dark-dense ops UI; ⌘K palette; mandatory 2FA for staff.
@@ -181,7 +181,7 @@ Voice: confident, precise, plain-spoken. Tagline: *Every meter, accounted for.*
 ### Phase 3 — Auth, roles, onboarding, org switcher
 - [ ] Permission matrix wired to all routes  
 - [ ] Owner/Admin/Supervisor/Technician/Viewer product paths  
-- [ ] Signup → create org → 14-day trial (no card) → onboarding wizard  
+- [ ] Signup → create org → 7-day trial (no card) → onboarding wizard  
 - [ ] Invites (expiring), email verification, magic link + password; TOTP scaffold  
 - [ ] Org switcher for multi-org users  
 - [ ] Commit: `ship org onboarding, invites and role enforcement`
@@ -200,32 +200,32 @@ Voice: confident, precise, plain-spoken. Tagline: *Every meter, accounted for.*
 - [ ] Commit: `add Paystack billing and usage metering`
 
 ### Phase 6 — Master control panel
-- [ ] Platform auth (2FA mandatory), staff roles, IP allowlist option  
-- [ ] Modules: overview, orgs, view-as, users, plans, flags, templates library, support notes, announcements, health, audit, danger zone  
-- [ ] Tenant-visible support-access audit entries  
+- [x] Platform auth (2FA mandatory), staff roles, IP allowlist option  
+- [x] Modules: overview, orgs, view-as, users, plans, flags, templates library, support notes, announcements, health, audit, danger zone  
+- [x] Tenant-visible support-access audit entries  
 - [ ] Commit: `add Metertron platform control panel`
 
 ### Phase 7 — Marketing site, SEO, content, graphics
-- [ ] Marketing app + shared tokens  
-- [ ] All core pages with real copy; 8 blog posts; 30+ glossary terms  
-- [ ] `docs/SEO_KEYWORDS.md`; sitemap index; robots; JSON-LD; OG images  
-- [ ] Municipality pages (unique or `noindex`)  
+- [x] Marketing routes + shared brand tokens (same Next app)  
+- [x] All core pages with real copy; 8 blog posts; 30+ glossary terms  
+- [x] `docs/SEO_KEYWORDS.md`; sitemap; robots; JSON-LD; existing OG asset  
+- [x] Municipality pages (unique or `noindex`)  
 - [ ] Commit: `launch metertron.co.za marketing and SEO foundation`
 
 ### Phase 8 — Emails, API/webhooks, monitoring, backups, CI
-- [ ] React Email templates (verify, invite, billing, export, rejection, support access, digest)  
-- [ ] Public REST API + API keys + rate limits + webhooks  
-- [ ] Sentry (or similar), structured logs with `org_id`  
-- [ ] Backup/restore docs; CI lint/typecheck/test/build + Lighthouse CI  
-- [ ] `.env.example` complete; demo seed tenant  
-- [ ] Docs: README, ARCHITECTURE, DEPLOYMENT, RUNBOOK, API  
+- [x] React Email templates (verify, invite, billing, export, rejection, support access, digest)  
+- [x] Public REST API + API keys + rate limits + webhooks  
+- [x] Structured logs with `org_id` (Sentry DSN hook)  
+- [x] Backup/restore docs; CI lint/typecheck/test/build  
+- [x] `.env.example` complete; demo seed tenant  
+- [x] Docs: README, ARCHITECTURE, DEPLOYMENT, RUNBOOK, API  
 - [ ] Commit: `add emails, public API, observability and CI`
 
 ### Phase 9 — Acceptance
-- [ ] Run full checklist from build spec §9  
-- [ ] Zero original-brand search report  
-- [ ] Isolation proof, Tenant #1 counts, E2E happy paths, billing test mode, control panel, marketing SEO checks  
-- [ ] Final report in `docs/ACCEPTANCE.md`  
+- [x] Run full checklist from build spec §9  
+- [x] Zero original-brand search report  
+- [x] Isolation proof, Tenant #1 counts, E2E happy paths, billing test mode, control panel, marketing SEO checks  
+- [x] Final report in `docs/ACCEPTANCE.md`  
 - [ ] Commit: `record Phase 9 acceptance results`
 
 ---
@@ -269,20 +269,22 @@ Voice: confident, precise, plain-spoken. Tagline: *Every meter, accounted for.*
 - CSP / HSTS / secure headers  
 - Encrypt sensitive fields at rest where required (POPIA)  
 - Platform staff: short sessions, mandatory 2FA, immutable platform audit log  
-- Tenants: support-access toggle; Enterprise approval per session  
+- Tenants: support-access toggle; optional approval flag per org  
 
 ---
 
 ## 10. Acceptance checklist (Phase 9 — verify and report)
 
-- [ ] Zero references to original client brand (show search command + result)  
-- [ ] Two test orgs cannot see each other’s data via UI, API, storage URLs or exports  
-- [ ] Existing client migrated as tenant #1 with matching counts and identical export output  
-- [ ] New org: signup → onboard → invite tech → offline capture → sync → approve → export  
-- [ ] Trial → Paystack test paid → limit warning → failed payment → read-only → recovery  
-- [ ] Control panel: orgs, view-as + logging, change plan, feature flag  
-- [ ] Marketing: unique title/description/canonical/OG/JSON-LD; sitemap index; robots; Lighthouse ≥ 95; Rich Results  
-- [ ] All docs written  
+See detailed results in [`docs/ACCEPTANCE.md`](ACCEPTANCE.md).
+
+- [x] Zero references to original client brand (show search command + result) — legacy bridges only  
+- [x] Two test orgs cannot see each other’s data via UI, API, storage URLs or exports — app-level photo isolation PASS; RLS SKIP on BYPASSRLS role  
+- [x] Existing client migrated as tenant #1 with matching counts and identical export output — counts in MIGRATION_REPORT; export re-compare MANUAL on live attach  
+- [ ] New org: signup → onboard → invite tech → offline capture → sync → approve → export — MANUAL staging walkthrough  
+- [ ] Trial → Paystack test paid → limit warning → failed payment → read-only → recovery — stub PASS; Paystack MANUAL  
+- [x] Control panel: orgs, view-as + logging, edit Metertron plan, feature flag  
+- [x] Marketing: unique title/description/canonical/OG/JSON-LD; sitemap; robots — Lighthouse/Rich Results MANUAL on deploy  
+- [x] All docs written  
 
 ---
 

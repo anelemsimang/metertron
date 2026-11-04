@@ -1,9 +1,13 @@
+import { createElement } from "react";
 import { isMembershipRole } from "@/lib/membership";
 import { requireCapability } from "@/server/auth/require-admin";
 import { OrgAccessError, assertOrgWritable } from "@/server/billing/org-access";
 import { assertWithinSeatLimit } from "@/server/billing/usage";
 import { safeDbMessage, withOrg } from "@/server/db/client";
+import { sendEmail } from "@/server/email/send";
+import { InviteEmailTemplate } from "@/server/email/templates";
 import { createInvite, listInvites, revokeInvite } from "@/server/orgs/invites";
+import { log } from "@/server/observability/log";
 
 export async function GET() {
   const gate = await requireCapability("invite_members");
@@ -56,13 +60,33 @@ export async function POST(request: Request) {
         role,
         invitedBy: gate.user.id,
       });
+      const origin = new URL(request.url).origin;
+      const acceptPath = `/invite/${invite.token}`;
+      try {
+        await sendEmail({
+          to: email,
+          subject: `${gate.user.organisationName} invited you to Metertron`,
+          organisationId: gate.user.organisationId,
+          react: createElement(InviteEmailTemplate, {
+            organisationName: gate.user.organisationName,
+            role,
+            inviteUrl: `${origin}${acceptPath}`,
+            inviterName: gate.user.name,
+          }),
+        });
+      } catch (error) {
+        log.warn("invite.email_failed", {
+          organisationId: gate.user.organisationId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
       return Response.json({
         invite: {
           id: invite.id,
           email: invite.email,
           role: invite.role,
           expiresAt: invite.expiresAt,
-          acceptPath: `/invite/${invite.token}`,
+          acceptPath,
         },
       });
     });

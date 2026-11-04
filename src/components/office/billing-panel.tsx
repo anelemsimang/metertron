@@ -8,9 +8,6 @@ type Plan = {
   name: string;
   description: string;
   amountMonthlyZarCents: number | null;
-  seatLimit: number | null;
-  installsPerMonth: number | null;
-  storageBytes: number | null;
 };
 
 type Overview = {
@@ -18,18 +15,15 @@ type Overview = {
     status: string;
     planKey: string;
     trialEndsAt: string | null;
-    vatNumber: string | null;
   };
   subscription: { status: string; interval: string; currentPeriodEnd: string | null; graceEndsAt: string | null } | null;
   plan: Plan | null;
-  plans: Plan[];
   invoices: Array<{
     id: string;
     number: string;
     status: string;
     totalZarCents: number;
     vatZarCents: number;
-    subtotalZarCents: number;
     paidAt: string | null;
   }>;
 };
@@ -38,18 +32,14 @@ type Usage = {
   seatsUsed: number;
   installsCount: number;
   storageBytes: number;
-  limits: { seatLimit: number | null; installsPerMonth: number | null; storageBytes: number | null };
-  warnings: string[];
-  blocked: string[];
 };
 
 function zar(cents: number) {
   return new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(cents / 100);
 }
 
-function bytesLabel(value: number | null) {
-  if (value == null) return "Custom";
-  if (value >= 1_073_741_824) return `${(value / 1_073_741_824).toFixed(0)} GB`;
+function bytesLabel(value: number) {
+  if (value >= 1_073_741_824) return `${(value / 1_073_741_824).toFixed(1)} GB`;
   return `${Math.round(value / 1_048_576)} MB`;
 }
 
@@ -82,7 +72,6 @@ export function BillingPanel() {
   useEffect(() => {
     const paid = params.get("paid");
     const reference = params.get("reference");
-    const plan = params.get("plan") ?? "starter";
     const iv = params.get("interval") === "annual" ? "annual" : "monthly";
     if (paid === "1" && reference) {
       void (async () => {
@@ -90,7 +79,7 @@ export function BillingPanel() {
         await fetch("/api/office/billing", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ action: "verify", reference, planKey: plan, interval: iv }),
+          body: JSON.stringify({ action: "verify", reference, interval: iv }),
         });
         setPending(false);
         router.replace("/office/billing");
@@ -99,13 +88,13 @@ export function BillingPanel() {
     }
   }, [params, router]);
 
-  async function checkout(planKey: string) {
+  async function subscribe() {
     setPending(true);
     setError("");
     const response = await fetch("/api/office/billing", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action: "checkout", planKey, interval }),
+      body: JSON.stringify({ action: "checkout", interval }),
     });
     const body = (await response.json()) as { error?: string; checkout?: { authorizationUrl: string } };
     setPending(false);
@@ -120,101 +109,76 @@ export function BillingPanel() {
     return <p className="text-sm text-muted">{error || "Loading billing…"}</p>;
   }
 
+  const monthly = overview.plan?.amountMonthlyZarCents ?? 0;
+  const amount = interval === "annual" ? monthly * 12 : monthly;
+  const subscribed = overview.organisation.status === "active" && overview.subscription?.status === "active";
+
   return (
     <div className="space-y-6">
       <section className="rounded-lg border border-line bg-surface p-4 shadow-sm">
         <p className="text-sm text-muted">Organisation status</p>
         <p className="mt-1 text-xl font-semibold capitalize">{overview.organisation.status.replace("_", " ")}</p>
         <p className="mt-2 text-sm text-muted">
-          Plan <strong>{overview.plan?.name ?? overview.organisation.planKey}</strong>
-          {overview.organisation.trialEndsAt
+          Metertron subscription
+          {overview.organisation.trialEndsAt && overview.organisation.status === "trialing"
             ? ` · trial ends ${new Date(overview.organisation.trialEndsAt).toLocaleDateString("en-ZA")}`
+            : null}
+          {overview.subscription?.currentPeriodEnd && subscribed
+            ? ` · renews ${new Date(overview.subscription.currentPeriodEnd).toLocaleDateString("en-ZA")}`
             : null}
           {overview.subscription?.graceEndsAt
             ? ` · grace until ${new Date(overview.subscription.graceEndsAt).toLocaleDateString("en-ZA")}`
             : null}
         </p>
-        <p className="mt-2 text-xs text-muted">Checkout provider: {provider === "stub" ? "local stub (set PAYSTACK_SECRET_KEY for live/test Paystack)" : "Paystack"}</p>
+        <p className="mt-2 text-xs text-muted">
+          Checkout: {provider === "stub" ? "local stub (set PAYSTACK_SECRET_KEY for Paystack)" : "Paystack"}
+        </p>
+      </section>
+
+      <section className="rounded-lg border border-line bg-surface p-5 shadow-sm">
+        <h2 className="text-lg font-semibold">{overview.plan?.name ?? "Metertron"}</h2>
+        <p className="mt-1 text-sm text-muted">{overview.plan?.description}</p>
+        <p className="mt-3 text-sm font-semibold text-brand">Full product access for this organisation</p>
+        <ul className="mt-2 space-y-1 text-sm text-muted">
+          <li>Field capture, review, exports, templates, forms, team, and stock</li>
+          <li>No seat or install caps on this plan</li>
+        </ul>
+
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <div className="flex rounded-md bg-canvas p-1 text-sm font-semibold">
+            <button type="button" onClick={() => setInterval("monthly")} className={`min-h-10 rounded-md px-3 ${interval === "monthly" ? "bg-surface shadow-sm" : "text-muted"}`}>
+              Monthly
+            </button>
+            <button type="button" onClick={() => setInterval("annual")} className={`min-h-10 rounded-md px-3 ${interval === "annual" ? "bg-surface shadow-sm" : "text-muted"}`}>
+              Annual
+            </button>
+          </div>
+          <p className="text-2xl font-bold">
+            {zar(amount)}
+            <span className="text-sm font-medium text-muted"> {interval === "annual" ? "/ year excl. VAT" : "/ month excl. VAT"}</span>
+          </p>
+        </div>
+
+        <button
+          type="button"
+          disabled={pending || subscribed}
+          onClick={() => void subscribe()}
+          className="mt-5 min-h-12 rounded-md bg-primary px-5 font-semibold text-on-primary disabled:opacity-60"
+        >
+          {subscribed ? "Subscribed" : pending ? "Please wait…" : "Subscribe"}
+        </button>
       </section>
 
       {usage ? (
         <section className="space-y-2 rounded-lg border border-line bg-surface p-4 shadow-sm">
           <h2 className="font-semibold">Usage this month</h2>
           <ul className="grid gap-2 text-sm sm:grid-cols-3">
-            <li>
-              Seats: {usage.seatsUsed}
-              {usage.limits.seatLimit != null ? ` / ${usage.limits.seatLimit}` : " · unlimited"}
-            </li>
-            <li>
-              Installs: {usage.installsCount}
-              {usage.limits.installsPerMonth != null ? ` / ${usage.limits.installsPerMonth}` : " · unlimited"}
-            </li>
-            <li>
-              Storage: {bytesLabel(usage.storageBytes)}
-              {usage.limits.storageBytes != null ? ` / ${bytesLabel(usage.limits.storageBytes)}` : ""}
-            </li>
+            <li>Seats: {usage.seatsUsed}</li>
+            <li>Installs: {usage.installsCount}</li>
+            <li>Storage: {bytesLabel(usage.storageBytes)}</li>
           </ul>
-          {usage.warnings.map((warning) => (
-            <p key={warning} className="text-sm font-semibold text-[color:var(--warning)]">
-              {warning}
-            </p>
-          ))}
-          {usage.blocked.map((blocked) => (
-            <p key={blocked} className="text-sm font-semibold text-danger">
-              {blocked}
-            </p>
-          ))}
         </section>
       ) : null}
-
-      <section className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-semibold">Plans (excl. VAT)</h2>
-          <div className="flex rounded-md bg-canvas p-1 text-sm font-semibold">
-            <button type="button" onClick={() => setInterval("monthly")} className={`min-h-10 rounded-md px-3 ${interval === "monthly" ? "bg-surface shadow-sm" : "text-muted"}`}>
-              Monthly
-            </button>
-            <button type="button" onClick={() => setInterval("annual")} className={`min-h-10 rounded-md px-3 ${interval === "annual" ? "bg-surface shadow-sm" : "text-muted"}`}>
-              Annual (2 months free)
-            </button>
-          </div>
-        </div>
-        <ul className="grid gap-3 lg:grid-cols-3">
-          {overview.plans
-            .filter((plan) => plan.key !== "trial")
-            .map((plan) => {
-              const monthly = plan.amountMonthlyZarCents;
-              const amount = monthly == null ? null : interval === "annual" ? monthly * 10 : monthly;
-              return (
-                <li key={plan.key} className="flex flex-col rounded-lg border border-line bg-surface p-4 shadow-sm">
-                  <p className="text-lg font-semibold">{plan.name}</p>
-                  <p className="mt-1 text-sm text-muted">{plan.description}</p>
-                  <p className="mt-4 text-2xl font-bold">
-                    {amount == null ? "Custom" : zar(amount)}
-                    {amount != null ? <span className="text-sm font-medium text-muted"> {interval === "annual" ? "/ year" : "/ month"}</span> : null}
-                  </p>
-                  <ul className="mt-3 space-y-1 text-sm text-muted">
-                    <li>{plan.seatLimit ?? "Unlimited"} seats</li>
-                    <li>{plan.installsPerMonth ?? "Unlimited"} installs / month</li>
-                    <li>{bytesLabel(plan.storageBytes)} storage</li>
-                  </ul>
-                  {plan.key === "enterprise" ? (
-                    <p className="mt-auto pt-4 text-sm font-semibold text-brand">Contact sales</p>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={pending || overview.organisation.planKey === plan.key}
-                      onClick={() => void checkout(plan.key)}
-                      className="mt-auto min-h-12 rounded-md bg-primary px-4 font-semibold text-on-primary disabled:opacity-60"
-                    >
-                      {overview.organisation.planKey === plan.key ? "Current plan" : pending ? "Please wait…" : "Choose plan"}
-                    </button>
-                  )}
-                </li>
-              );
-            })}
-        </ul>
-      </section>
 
       <section className="space-y-2">
         <h2 className="font-semibold">Invoices</h2>

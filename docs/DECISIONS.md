@@ -4,6 +4,53 @@ Living record of product and engineering choices. Newest first within each phase
 
 ---
 
+## Phase 9 (2026-11-04)
+
+| Topic | Decision |
+|-------|----------|
+| Acceptance evidence | Recorded in `docs/ACCEPTANCE.md` with PASS / PARTIAL / MANUAL / SKIP |
+| Isolation | App-level cross-tenant photo refusal verified; Postgres RLS assertions skipped until `NOBYPASSRLS` app role |
+| Remaining manual | Staging E2E walkthrough, Paystack test mode, Lighthouse on public URL |
+
+---
+
+## Phase 8 (2026-11-04)
+
+| Topic | Decision |
+|-------|----------|
+| Email | React templates + `sendEmail`; Resend when `RESEND_API_KEY` set, else stub logs |
+| Public API | `/api/v1` with hashed `mt_live_` keys, 120 rpm in-memory rate limit |
+| Webhooks | HMAC-SHA256 signed deliveries; start with job approved/rejected |
+| Observability | JSON logs with `org_id`; Sentry DSN reserved (SDK optional later) |
+| CI | GitHub Actions: tsc, test, lint, build |
+
+---
+
+## Phase 7 (2026-11-04)
+
+| Topic | Decision |
+|-------|----------|
+| App shape | Marketing stays in the same Next app under `(marketing)` route group (SSG-friendly pages). Separate `apps/marketing` deferred. |
+| Home `/` | Public marketing landing; app entry via `/login`, `/office`, `/field`. |
+| Pricing | Single Metertron plan; annual = 12× monthly; trial days from `TRIAL_DAYS`. |
+| Municipality SEO | Index only pages with unique substance (`ethekwini`); others `noindex`. |
+
+---
+
+## Phase 6 (2026-11-04)
+
+| Topic | Decision |
+|-------|----------|
+| App shape | Stay in the single Next app at `/platform` (separate staff cookie + auth). Marketing split still Phase 7. |
+| Staff auth | `platform_staff` + `platform_sessions`; cookie `metertron-platform-session`; **mandatory TOTP** before console access. |
+| Roles | `owner` / `admin` / `support` / `readonly` with capability matrix in `src/server/platform/require.ts`. |
+| IP allowlist | Optional `PLATFORM_IP_ALLOWLIST` (comma-separated). |
+| View-as | `platform_support_sessions` + tenant-visible `support_access_events`; cookie `metertron-support-session`; synthetic viewer session for Manager (read-only). |
+| Bootstrap | `npm run platform:bootstrap` with `PLATFORM_BOOTSTRAP_EMAIL` / `PLATFORM_BOOTSTRAP_PASSWORD` / optional `PLATFORM_BOOTSTRAP_NAME`. |
+| Plans UI | Platform console edits only the single `metertron` plan. Legacy `trial`/`starter`/`growth`/`enterprise` rows removed in `0008_drop_legacy_plans.sql`. |
+
+---
+
 ## Phase 0 → 1 (2026-11-04)
 
 User replied **proceed** without answering plan §11. Defaults applied:

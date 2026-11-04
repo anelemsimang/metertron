@@ -74,7 +74,7 @@ async function main() {
 
   let after = before;
   if (!dryRun) {
-    const trialEnds = org.trialEndsAt ?? new Date(Date.now() + 14 * 86400000);
+    const trialEnds = org.trialEndsAt ?? new Date(Date.now() + 7 * 86400000);
     await db
       .update(organisations)
       .set({

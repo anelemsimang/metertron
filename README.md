@@ -2,17 +2,17 @@
 
 **Every meter, accounted for.**
 
-Field-to-municipality meter installation software. Capture. Verify. Submit.
+Field-to-municipality meter installation software for South African contractors.
 
-## Apps in this repo
+## Surfaces
 
 | Surface | Path | Who |
 |---------|------|-----|
+| Marketing | `/` | Public site, blog, glossary |
 | Field PWA | `/field` | Technicians — offline capture, photos, GPS, sync |
-| Manager | `/office` | Supervisors/admins — review, stock, exports |
-| Login | `/login` | Shared auth |
-
-Marketing site and platform control panel land in later phases.
+| Manager | `/office` | Supervisors/admins — review, stock, exports, billing |
+| Platform | `/platform` | Metertron staff — orgs, support view-as, plan |
+| Public API | `/api/v1` | API keys + webhooks |
 
 ## Stack
 
@@ -22,12 +22,13 @@ Next.js 15 · React 19 · TypeScript · Tailwind 4 · Postgres · Drizzle · Dex
 
 ```bash
 cp .env.example .env
-# set DATABASE_URL (Supabase pooler or local Docker)
+# set DATABASE_URL
 
-docker compose up -d   # optional local Postgres
 npm install
-npm run db:push
-npm run db:seed
+npx tsx --env-file=.env scripts/apply-sql.ts drizzle/0000_init.sql
+# …apply remaining drizzle/*.sql in order, or use your existing DB
+npm run db:seed:demo   # optional demo owner
+npm run platform:bootstrap  # optional platform owner
 npm run dev
 ```
 
@@ -37,16 +38,17 @@ npm run dev
 |---------|---------|
 | `npm run dev` | Next.js (Turbopack) |
 | `npm test` | Unit tests |
-| `npm run db:push` | Push Drizzle schema |
-| `npm run db:seed` | Ensure default organisation |
-| `node scripts/render-brand-icons.mjs` | Regenerate logo/favicon/OG assets |
-
-## Brand
-
-See [`docs/BRAND.md`](docs/BRAND.md). Design tokens live in `src/styles/tokens.css`.
+| `npm run lint` | ESLint |
+| `npm run db:seed:demo` | Demo organisation + owner |
+| `npm run platform:bootstrap` | First platform staff owner |
+| `node scripts/render-brand-icons.mjs` | Regenerate brand assets |
 
 ## Docs
 
-- [`docs/AUDIT.md`](docs/AUDIT.md) — Phase 0 audit  
-- [`docs/SAAS_PLAN.md`](docs/SAAS_PLAN.md) — SaaS roadmap  
-- [`docs/DECISIONS.md`](docs/DECISIONS.md) — decision log  
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
+- [`docs/RUNBOOK.md`](docs/RUNBOOK.md)
+- [`docs/API.md`](docs/API.md)
+- [`docs/BACKUPS.md`](docs/BACKUPS.md)
+- [`docs/SAAS_PLAN.md`](docs/SAAS_PLAN.md)
+- [`docs/SEO_KEYWORDS.md`](docs/SEO_KEYWORDS.md)

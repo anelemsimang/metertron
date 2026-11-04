@@ -14,12 +14,15 @@
 
 :root {
   --mt-grove: #0e3d24;
+  --mt-reservoir: #0e3d24;
   --mt-leaf: #147a45;
   --mt-leaf-deep: #0f5c34;
   --mt-citrus: #f07a1a;
-  --mt-citrus-deep: #c45a08;
+  --mt-citrus-deep: #9a4500;
   --mt-mist: #e8f5ee;
   --mt-fault: #d92d20;
+  --mt-flow: var(--mt-leaf);
+  --mt-verified: var(--mt-citrus);
 
   --mt-slate-50: #f7faf8;
   --mt-slate-100: #eef3ef;

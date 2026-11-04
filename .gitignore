@@ -10,3 +10,5 @@ out
 tsconfig.tsbuildinfo
 data
 .data
+.tmp-lh
+.tmp-lh-*.json

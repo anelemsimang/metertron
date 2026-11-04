@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="180" viewBox="0 0 720 180" role="img" aria-label="Capture, verify, submit">
+  <rect width="720" height="180" fill="#F7FAF8"/>
+  <g font-family="system-ui,sans-serif">
+    <rect x="40" y="40" width="160" height="100" rx="12" fill="#0B3D2E"/>
+    <text x="120" y="88" text-anchor="middle" fill="#fff" font-size="16" font-weight="600">Capture</text>
+    <text x="120" y="112" text-anchor="middle" fill="#A8D5C2" font-size="12">Field + offline</text>
+    <path d="M210 90h60" stroke="#2EC4B6" stroke-width="3" stroke-dasharray="6 4">
+      <animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.2s" repeatCount="indefinite"/>
+    </path>
+    <rect x="280" y="40" width="160" height="100" rx="12" fill="#147A45"/>
+    <text x="360" y="88" text-anchor="middle" fill="#fff" font-size="16" font-weight="600">Verify</text>
+    <text x="360" y="112" text-anchor="middle" fill="#D5F0E3" font-size="12">Office review</text>
+    <path d="M450 90h60" stroke="#2EC4B6" stroke-width="3" stroke-dasharray="6 4">
+      <animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.2s" begin="0.3s" repeatCount="indefinite"/>
+    </path>
+    <rect x="520" y="40" width="160" height="100" rx="12" fill="#F5A623"/>
+    <text x="600" y="88" text-anchor="middle" fill="#fff" font-size="16" font-weight="600">Submit</text>
+    <text x="600" y="112" text-anchor="middle" fill="#FFF4E0" font-size="12">Municipal export</text>
+  </g>
+</svg>

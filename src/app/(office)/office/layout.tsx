@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { OfficeShell } from "@/components/office/office-shell";
+import { SupportBanner } from "@/components/office/support-banner";
 import { BRAND } from "@/lib/brand";
 import { isOfficeMembership } from "@/lib/roles";
 import { safeDbMessage } from "@/server/db/client";
 import { getSessionUser } from "@/server/auth/session";
+import { getSupportContext } from "@/server/platform/support";
 
 export const metadata: Metadata = {
   title: "Manager",
@@ -15,8 +17,9 @@ export const metadata: Metadata = {
 
 export default async function OfficeLayout({ children }: { children: ReactNode }) {
   let user;
+  let support;
   try {
-    user = await getSessionUser();
+    [user, support] = await Promise.all([getSessionUser(), getSupportContext()]);
   } catch (error) {
     unstable_rethrow(error);
     return (
@@ -26,6 +29,24 @@ export default async function OfficeLayout({ children }: { children: ReactNode }
       </main>
     );
   }
+
+  if (support) {
+    return (
+      <>
+        <SupportBanner staffName={support.staffName} organisationName={support.organisationName} />
+        <OfficeShell
+          user={{
+            name: `${support.staffName} (support)`,
+            email: support.staffEmail,
+            organisationName: support.organisationName,
+          }}
+        >
+          {children}
+        </OfficeShell>
+      </>
+    );
+  }
+
   if (!user) redirect("/login?next=/office");
   if (!isOfficeMembership(user.membershipRole)) redirect("/field");
   if (!user.onboardingCompleted && (user.membershipRole === "owner" || user.membershipRole === "admin")) {

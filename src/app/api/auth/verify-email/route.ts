@@ -1,8 +1,12 @@
+import { createElement } from "react";
 import { eq } from "drizzle-orm";
 import { requireSession } from "@/server/auth/require-admin";
 import { consumeAuthToken, issueAuthToken } from "@/server/auth/tokens";
 import { getDb, safeDbMessage, withBypassRls } from "@/server/db/client";
 import { users } from "@/server/db/schema";
+import { sendEmail } from "@/server/email/send";
+import { VerifyEmailTemplate } from "@/server/email/templates";
+import { log } from "@/server/observability/log";
 
 export async function POST(request: Request) {
   const body = (await request.json()) as { token?: unknown; action?: unknown };
@@ -19,7 +23,27 @@ export async function POST(request: Request) {
         userId: gate.user.id,
         ttlHours: 48,
       });
-      return Response.json({ ok: true, emailVerifyToken: issued.token });
+      const origin = new URL(request.url).origin;
+      const verifyUrl = `${origin}/login?verify=${issued.token}`;
+      try {
+        await sendEmail({
+          to: gate.user.email,
+          subject: "Verify your Metertron email",
+          organisationId: gate.user.organisationId,
+          react: createElement(VerifyEmailTemplate, { name: gate.user.name, verifyUrl }),
+        });
+      } catch (error) {
+        log.warn("verify.email_failed", {
+          organisationId: gate.user.organisationId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return Response.json({
+        ok: true,
+        emailed: true,
+        // Dev convenience when RESEND_API_KEY is unset
+        emailVerifyToken: process.env.RESEND_API_KEY ? undefined : issued.token,
+      });
     }
 
     const token = typeof body.token === "string" ? body.token.trim() : "";

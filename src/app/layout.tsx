@@ -1,29 +1,36 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { NavigationLoadingBoundary } from "@/components/brand/navigation-loading-boundary";
 import { BRAND, STORAGE } from "@/lib/brand";
+import { SITE } from "@/lib/marketing/site";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["500", "600"],
   variable: "--font-display",
   display: "swap",
+  preload: true,
 });
 
 const inter = Inter({
   subsets: ["latin"],
+  weight: ["400", "600"],
   variable: "--font-sans",
   display: "swap",
+  preload: true,
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["500"],
   variable: "--font-mono",
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE.url),
   title: {
     default: BRAND.name,
     template: `%s · ${BRAND.name}`,
@@ -73,7 +80,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-screen font-sans antialiased" suppressHydrationWarning>
-        {children}
+        <NavigationLoadingBoundary>{children}</NavigationLoadingBoundary>
       </body>
     </html>
   );

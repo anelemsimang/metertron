@@ -42,6 +42,8 @@ export const LEGACY_STORAGE = {
 
 export const SESSION_COOKIE = "metertron-session";
 export const LEGACY_SESSION_COOKIE = "metervault-session";
+export const PLATFORM_SESSION_COOKIE = "metertron-platform-session";
+export const SUPPORT_SESSION_COOKIE = "metertron-support-session";
 
 export function readMigratedStorage(key: keyof typeof STORAGE): string | null {
   if (typeof window === "undefined") return null;

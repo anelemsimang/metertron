@@ -1,8 +1,10 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { isOfficeRole } from "@/lib/roles";
+import { dispatchWebhookEvent } from "@/server/api/webhooks";
 import { getSessionUser } from "@/server/auth/session";
 import { getDb, safeDbMessage, withOrg } from "@/server/db/client";
 import { jobs } from "@/server/db/schema";
+import { log } from "@/server/observability/log";
 
 const WAITING = ["submitted", "in_review", "resubmitted"] as const;
 
@@ -40,6 +42,22 @@ export async function POST(request: Request) {
             : { rejectionMessage: null }),
         })
         .where(and(eq(jobs.id, jobId), eq(jobs.organisationId, user.organisationId)));
+
+      const event = decision === "approved" ? "job.approved" : "job.rejected";
+      try {
+        await dispatchWebhookEvent(user.organisationId, event, {
+          jobId,
+          status: decision,
+          rejectionMessage: decision === "rejected" ? message || null : null,
+          decidedBy: user.id,
+        });
+      } catch (error) {
+        log.warn("review.webhook_failed", {
+          organisationId: user.organisationId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
       return Response.json({ ok: true, status: decision });
     });
   } catch (error) {

@@ -1,8 +1,7 @@
 import { eq } from "drizzle-orm";
+import { METERTRON_PLAN_KEY, TRIAL_DAYS } from "@/server/billing/plans";
 import { getDb, withBypassRls } from "@/server/db/client";
 import { organisations } from "@/server/db/schema";
-
-const TRIAL_DAYS = 14;
 
 export function slugifyOrgName(name: string) {
   const base = name
@@ -44,7 +43,7 @@ export async function createOrganisation(input: { name: string; legalName?: stri
         legalName,
         slug,
         status: "trialing",
-        planKey: "trial",
+        planKey: METERTRON_PLAN_KEY,
         trialEndsAt,
       })
       .returning({

@@ -98,8 +98,8 @@ export default function OnboardingPage() {
       <h1 className="mt-6 text-2xl font-bold">Set up {BRAND.name}</h1>
       <p className="mt-2 text-sm text-muted">
         {trialEndsAt
-          ? `Your 14-day trial runs until ${new Date(trialEndsAt).toLocaleDateString("en-ZA")}. No card required.`
-          : "Start your 14-day trial — no card required."}
+          ? `Your 7-day trial runs until ${new Date(trialEndsAt).toLocaleDateString("en-ZA")}. No card required.`
+          : "Start your 7-day trial — no card required."}
       </p>
 
       <ol className="mt-6 flex gap-2 text-xs font-semibold uppercase tracking-wide text-muted">

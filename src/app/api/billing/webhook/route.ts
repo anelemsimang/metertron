@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { markPaymentFailed, recoverOrganisation } from "@/server/billing/dunning";
+import { METERTRON_PLAN_KEY } from "@/server/billing/plans";
 import { getBillingProvider } from "@/server/billing/provider";
 import { markInvoicePaid } from "@/server/billing/subscriptions";
 import { getDb, safeDbMessage, withBypassRls } from "@/server/db/client";
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
       event?: string;
       data?: {
         reference?: string;
-        metadata?: { organisation_id?: string; plan_key?: string; interval?: string };
+        metadata?: { organisation_id?: string; interval?: string };
         status?: string;
       };
     };
@@ -35,7 +36,6 @@ export async function POST(request: Request) {
       });
 
       if (event.event === "charge.success" && event.data?.reference && organisationId) {
-        const planKey = event.data.metadata?.plan_key ?? "starter";
         const interval = event.data.metadata?.interval === "annual" ? "annual" : "monthly";
         const [existing] = await getDb()
           .select({ id: invoices.id })
@@ -43,9 +43,9 @@ export async function POST(request: Request) {
           .where(eq(invoices.paystackReference, event.data.reference))
           .limit(1);
         if (existing) {
-          await markInvoicePaid(organisationId, event.data.reference, planKey, interval);
+          await markInvoicePaid(organisationId, event.data.reference, interval);
         } else {
-          await recoverOrganisation(organisationId, planKey);
+          await recoverOrganisation(organisationId, METERTRON_PLAN_KEY);
         }
       }
 

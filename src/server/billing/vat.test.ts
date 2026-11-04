@@ -8,6 +8,6 @@ test("VAT 15% on exclusive amounts", () => {
   assert.equal(result.totalZarCents, 171_350);
 });
 
-test("annual billing is ten months", () => {
-  assert.equal(annualFromMonthly(399_000), 3_990_000);
+test("annual billing is twelve months", () => {
+  assert.equal(annualFromMonthly(149_000), 1_788_000);
 });

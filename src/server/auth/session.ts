@@ -217,10 +217,30 @@ function rememberedUser(token: string) {
   return hit.user;
 }
 
+async function sessionUserFromSupport(): Promise<SessionUser | null> {
+  const { getSupportContext } = await import("@/server/platform/support");
+  const support = await getSupportContext();
+  if (!support) return null;
+  return {
+    id: support.staffId,
+    name: `${support.staffName} (support)`,
+    username: "metertron-support",
+    email: support.staffEmail,
+    organisationId: support.organisationId,
+    organisationName: support.organisationName,
+    organisationSlug: support.organisationSlug,
+    onboardingCompleted: true,
+    orgRole: "member",
+    membershipRole: "viewer",
+    emailVerified: true,
+    totpEnabled: true,
+  };
+}
+
 export async function getSessionUser(): Promise<SessionUser | null> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value ?? store.get(LEGACY_SESSION_COOKIE)?.value;
-  if (!token) return null;
+  if (!token) return sessionUserFromSupport();
 
   if (!store.get(SESSION_COOKIE)?.value && store.get(LEGACY_SESSION_COOKIE)?.value) {
     store.set(SESSION_COOKIE, token, cookieOptions());
@@ -232,12 +252,12 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   try {
     const user = await readSession(token);
     if (user) remembered.set(token, { user, freshUntil: Date.now() + SESSION_MEMORY_MS });
-    return user;
+    return user ?? sessionUserFromSupport();
   } catch (error) {
     if (!isTransientDbError(error)) throw error;
     resetDb();
     const user = await readSession(token);
     if (user) remembered.set(token, { user, freshUntil: Date.now() + SESSION_MEMORY_MS });
-    return user;
+    return user ?? sessionUserFromSupport();
   }
 }

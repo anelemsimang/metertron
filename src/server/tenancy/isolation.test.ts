@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { eq, sql } from "drizzle-orm";
 import { getDb, withBypassRls, withOrg } from "@/server/db/client";
-import { jobs, organisations, users } from "@/server/db/schema";
+import { contracts, formVersions, jobs, organisations, users } from "@/server/db/schema";
 import { acceptSyncedPhoto } from "@/server/sync/persist";
 import type { SessionUser } from "@/server/auth/session";
 
@@ -30,11 +30,11 @@ async function seedPair() {
     const suffix = Date.now().toString(36);
     const [orgA] = await db
       .insert(organisations)
-      .values({ name: `Iso A ${suffix}`, legalName: `Iso A ${suffix}`, slug: `iso-a-${suffix}`, status: "active", planKey: "trial" })
+      .values({ name: `Iso A ${suffix}`, legalName: `Iso A ${suffix}`, slug: `iso-a-${suffix}`, status: "active", planKey: "metertron" })
       .returning();
     const [orgB] = await db
       .insert(organisations)
-      .values({ name: `Iso B ${suffix}`, legalName: `Iso B ${suffix}`, slug: `iso-b-${suffix}`, status: "active", planKey: "trial" })
+      .values({ name: `Iso B ${suffix}`, legalName: `Iso B ${suffix}`, slug: `iso-b-${suffix}`, status: "active", planKey: "metertron" })
       .returning();
     const [userA] = await db
       .insert(users)
@@ -56,10 +56,40 @@ async function seedPair() {
         email: `techb-${suffix}@example.com`,
       })
       .returning();
+    const contractValues = {
+      municipalityName: "Test Municipality",
+      code: `C-${suffix}`,
+      name: "Isolation contract",
+      deploymentName: "Isolation",
+      companyName: "Isolation Co",
+      exportFilenamePattern: "export.xlsx",
+      exportSheetName: "Main",
+      statusExportValue: "Final",
+      listPhrases: { oldMeterSuffix: " (old)", connectionValue: "Connection" },
+    };
+    const [contractA] = await db
+      .insert(contracts)
+      .values({ ...contractValues, organisationId: orgA.id, code: `A-${suffix}` })
+      .returning({ id: contracts.id });
+    await db.insert(contracts).values({ ...contractValues, organisationId: orgB.id, code: `B-${suffix}` });
+    const [formA] = await db
+      .insert(formVersions)
+      .values({
+        organisationId: orgA.id,
+        contractId: contractA.id,
+        key: "meter-change",
+        version: 1,
+        status: "published",
+        schema: { key: "meter-change", version: 1, sections: [] },
+        publishedAt: new Date(),
+      })
+      .returning({ id: formVersions.id });
     const [jobA] = await db
       .insert(jobs)
       .values({
         organisationId: orgA.id,
+        contractId: contractA.id,
+        formVersionId: formA.id,
         enumeratorId: userA.id,
         status: "submitted",
         idempotencyKey: `job-a-${suffix}`,

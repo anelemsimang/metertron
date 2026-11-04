@@ -52,7 +52,7 @@ export const organisations = pgTable("organisations", {
   legalName: text("legal_name").notNull(),
   slug: text("slug").notNull().unique(),
   status: orgStatus("status").notNull().default("trialing"),
-  planKey: text("plan_key").notNull().default("trial"),
+  planKey: text("plan_key").notNull().default("metertron"),
   trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
   locale: text("locale").notNull().default("en-ZA"),
   timezone: text("timezone").notNull().default("Africa/Johannesburg"),
@@ -540,3 +540,162 @@ export const billingEvents = pgTable("billing_events", {
   index("billing_events_org").on(table.organisationId),
   index("billing_events_kind").on(table.kind),
 ]);
+
+/** Platform control panel — separate from tenant users. */
+export const platformStaffRole = pgEnum("platform_staff_role", ["owner", "admin", "support", "readonly"]);
+
+export const platformStaff = pgTable("platform_staff", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull(),
+  name: text("name").notNull(),
+  passwordHash: text("password_hash").notNull(),
+  role: platformStaffRole("role").notNull().default("support"),
+  totpSecret: text("totp_secret"),
+  totpEnabledAt: timestamp("totp_enabled_at", { withTimezone: true }),
+  disabledAt: timestamp("disabled_at", { withTimezone: true }),
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("platform_staff_email").on(table.email),
+]);
+
+export const platformSessions = pgTable("platform_sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  staffId: uuid("staff_id").notNull().references(() => platformStaff.id),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  totpVerifiedAt: timestamp("totp_verified_at", { withTimezone: true }),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  ...timestamps,
+}, (table) => [
+  index("platform_sessions_staff").on(table.staffId),
+]);
+
+export const platformAuditEvents = pgTable("platform_audit_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  staffId: uuid("staff_id").references(() => platformStaff.id),
+  organisationId: uuid("organisation_id").references(() => organisations.id),
+  action: text("action").notNull(),
+  targetType: text("target_type"),
+  targetId: text("target_id"),
+  summary: text("summary").notNull().default(""),
+  payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
+  ipAddress: text("ip_address"),
+  ...timestamps,
+}, (table) => [
+  index("platform_audit_events_staff").on(table.staffId),
+  index("platform_audit_events_org").on(table.organisationId),
+  index("platform_audit_events_action").on(table.action),
+]);
+
+/** Tenant-visible log of Metertron support accessing their org. */
+export const supportAccessEvents = pgTable("support_access_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
+  staffId: uuid("staff_id").references(() => platformStaff.id),
+  staffEmail: text("staff_email").notNull(),
+  staffName: text("staff_name").notNull(),
+  reason: text("reason").notNull().default(""),
+  startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+  endedAt: timestamp("ended_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  index("support_access_events_org").on(table.organisationId),
+]);
+
+export const platformSupportSessions = pgTable("platform_support_sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  staffId: uuid("staff_id").notNull().references(() => platformStaff.id),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
+  accessEventId: uuid("access_event_id").references(() => supportAccessEvents.id),
+  token: text("token").notNull().unique(),
+  reason: text("reason").notNull().default(""),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  endedAt: timestamp("ended_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  index("platform_support_sessions_staff").on(table.staffId),
+  index("platform_support_sessions_org").on(table.organisationId),
+]);
+
+export const organisationSupportNotes = pgTable("organisation_support_notes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
+  staffId: uuid("staff_id").references(() => platformStaff.id),
+  body: text("body").notNull(),
+  ...timestamps,
+}, (table) => [
+  index("organisation_support_notes_org").on(table.organisationId),
+]);
+
+export const featureFlags = pgTable("feature_flags", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: text("key").notNull(),
+  description: text("description").notNull().default(""),
+  enabled: boolean("enabled").notNull().default(false),
+  /** Optional org id — null means global default. */
+  organisationId: uuid("organisation_id").references(() => organisations.id),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("feature_flags_key_org").on(table.key, table.organisationId),
+  index("feature_flags_org").on(table.organisationId),
+]);
+
+export const announcements = pgTable("announcements", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  severity: text("severity").notNull().default("info"),
+  startsAt: timestamp("starts_at", { withTimezone: true }).notNull().defaultNow(),
+  endsAt: timestamp("ends_at", { withTimezone: true }),
+  audience: text("audience").notNull().default("all"),
+  createdByStaffId: uuid("created_by_staff_id").references(() => platformStaff.id),
+  ...timestamps,
+});
+
+/** Public REST API keys (hashed). Prefix shown once at creation. */
+export const apiKeys = pgTable("api_keys", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
+  name: text("name").notNull(),
+  keyPrefix: text("key_prefix").notNull(),
+  keyHash: text("key_hash").notNull(),
+  scopes: jsonb("scopes").$type<string[]>().notNull().default(["read:jobs"]),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  createdByUserId: uuid("created_by_user_id").references(() => users.id),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("api_keys_prefix").on(table.keyPrefix),
+  index("api_keys_org").on(table.organisationId),
+]);
+
+export const webhookEndpoints = pgTable("webhook_endpoints", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
+  url: text("url").notNull(),
+  secret: text("secret").notNull(),
+  events: jsonb("events").$type<string[]>().notNull().default(["job.approved", "job.rejected"]),
+  disabledAt: timestamp("disabled_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  index("webhook_endpoints_org").on(table.organisationId),
+]);
+
+export const webhookDeliveries = pgTable("webhook_deliveries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
+  endpointId: uuid("endpoint_id").notNull().references(() => webhookEndpoints.id),
+  event: text("event").notNull(),
+  payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
+  statusCode: integer("status_code"),
+  success: boolean("success").notNull().default(false),
+  error: text("error"),
+  attemptedAt: timestamp("attempted_at", { withTimezone: true }).notNull().defaultNow(),
+  ...timestamps,
+}, (table) => [
+  index("webhook_deliveries_org").on(table.organisationId),
+  index("webhook_deliveries_endpoint").on(table.endpointId),
+]);
+

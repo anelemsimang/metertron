@@ -10,9 +10,9 @@ export function vatFromExclusive(subtotalZarCents: number, vatRateBps = 1500) {
   };
 }
 
-/** Annual = 10× monthly (2 months free). */
+/** Annual = 12× monthly (no discount). */
 export function annualFromMonthly(monthlyZarCents: number) {
-  return monthlyZarCents * 10;
+  return monthlyZarCents * 12;
 }
 
 export function formatZarFromCents(cents: number) {

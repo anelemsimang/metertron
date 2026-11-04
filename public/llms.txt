@@ -1,0 +1,30 @@
+# Metertron
+
+> Metertron is South African SaaS for water meter installation and change contractors: offline field capture, office review, stock and work orders, and configurable municipal Excel exports.
+
+## Product
+
+- Field PWA: structured meter-change forms, photos, GPS, offline sync
+- Office: review queues, work orders, team roles, stock issues
+- Exports: per-client spreadsheet templates (e.g. eThekwini-oriented starters)
+- Billing: single plan with 7-day trial; Paystack subscriptions with VAT
+
+## Audience
+
+- Meter installation contractors and implementing agents
+- Operations and office leads preparing municipal submissions
+- Not a consumer utility app; B2B operations software
+
+## Key URLs
+
+- Home: https://metertron.co.za/
+- Product: https://metertron.co.za/product
+- Pricing: https://metertron.co.za/pricing
+- Blog: https://metertron.co.za/blog
+- Glossary: https://metertron.co.za/glossary
+- Contact: hello@metertron.co.za
+
+## Technical
+
+- Next.js app; marketing at `/`, tenant app at `/office`, `/field`, platform at `/platform`
+- Sitemap: /sitemap.xml · RSS: /blog/rss.xml · OG images: /og?title=...

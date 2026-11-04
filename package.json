@@ -13,7 +13,10 @@
     "db:push": "drizzle-kit push",
     "db:migrate:tenancy": "tsx --env-file=.env scripts/apply-sql.ts drizzle/0003_tenancy.sql",
     "db:migrate:tenant1": "tsx --env-file=.env scripts/migrate-tenant1.ts",
-    "db:seed": "tsx --env-file=.env src/server/db/seed.ts"
+    "db:seed": "tsx --env-file=.env src/server/db/seed.ts",
+    "db:seed:demo": "tsx --env-file=.env scripts/seed-demo.ts",
+    "platform:bootstrap": "tsx --env-file=.env scripts/bootstrap-platform.ts",
+    "marketing:seo-check": "node --import tsx scripts/marketing-seo-check.mjs"
   },
   "dependencies": {
     "@zxing/browser": "^0.2.1",
@@ -28,6 +31,7 @@
     "postgres": "^3.4.9",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.3.1",
     "zod": "^4.6.7"
   },
@@ -39,6 +43,7 @@
     "drizzle-kit": "^0.31.11",
     "eslint": "^9.37.0",
     "eslint-config-next": "^15.5.4",
+    "puppeteer-core": "^24.43.1",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3"
