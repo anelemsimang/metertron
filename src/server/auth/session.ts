@@ -1,11 +1,13 @@
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
+import { LEGACY_SESSION_COOKIE, SESSION_COOKIE } from "@/lib/brand";
 import { type OrgRole } from "@/lib/roles";
 import { getDb, isTransientDbError, resetDb } from "@/server/db/client";
 import { sessions, users } from "@/server/db/schema";
 
-export const SESSION_COOKIE = "metervault-session";
+export { SESSION_COOKIE, LEGACY_SESSION_COOKIE };
+
 const THIRTY_DAYS = 60 * 60 * 24 * 30;
 const SESSION_MEMORY_MS = 60_000;
 
@@ -20,28 +22,34 @@ export type SessionUser = {
   orgRole: OrgRole;
 };
 
+function cookieOptions(maxAge = THIRTY_DAYS) {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge,
+  };
+}
+
 export async function createSession(userId: string) {
   const token = randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + THIRTY_DAYS * 1000);
   await getDb().insert(sessions).values({ userId, token, expiresAt });
   const store = await cookies();
-  store.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: THIRTY_DAYS,
-  });
+  store.set(SESSION_COOKIE, token, cookieOptions());
+  store.delete(LEGACY_SESSION_COOKIE);
 }
 
 export async function clearSession() {
   const store = await cookies();
-  const token = store.get(SESSION_COOKIE)?.value;
+  const token = store.get(SESSION_COOKIE)?.value ?? store.get(LEGACY_SESSION_COOKIE)?.value;
   if (token) {
     remembered.delete(token);
     await getDb().delete(sessions).where(eq(sessions.token, token));
   }
   store.delete(SESSION_COOKIE);
+  store.delete(LEGACY_SESSION_COOKIE);
 }
 
 async function readSession(token: string): Promise<SessionUser | null> {
@@ -97,8 +105,15 @@ function rememberedUser(token: string) {
 
 export async function getSessionUser(): Promise<SessionUser | null> {
   const store = await cookies();
-  const token = store.get(SESSION_COOKIE)?.value;
+  const token = store.get(SESSION_COOKIE)?.value ?? store.get(LEGACY_SESSION_COOKIE)?.value;
   if (!token) return null;
+
+  // Migrate legacy cookie name when a valid session is found.
+  if (!store.get(SESSION_COOKIE)?.value && store.get(LEGACY_SESSION_COOKIE)?.value) {
+    store.set(SESSION_COOKIE, token, cookieOptions());
+    store.delete(LEGACY_SESSION_COOKIE);
+  }
+
   const cached = rememberedUser(token);
   if (cached) return cached;
   try {

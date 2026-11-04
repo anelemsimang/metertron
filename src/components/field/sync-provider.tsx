@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { fieldDb, subscribeField, type SyncState } from "@/lib/field/db";
+import { fieldDb, migrateLegacyFieldDb, subscribeField, type SyncState } from "@/lib/field/db";
 import { flushOutbox, globalSyncState } from "@/lib/field/sync";
 
 const SyncContext = createContext<{ state: SyncState; pending: number; offline: boolean; refresh: () => void }>({
@@ -28,7 +28,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    void refresh();
+    void migrateLegacyFieldDb().then(refresh);
     const unsubscribe = subscribeField(() => void refresh());
     const onOnline = () => {
       setOffline(false);

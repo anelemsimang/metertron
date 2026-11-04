@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from "dexie";
-import { STORAGE } from "@/lib/brand";
+import { LEGACY_STORAGE, STORAGE } from "@/lib/brand";
 
 export type SyncState = "local" | "syncing" | "synced" | "failed";
 
@@ -47,8 +47,8 @@ class FieldDb extends Dexie {
   photos!: EntityTable<PhotoRecord, "id">;
   outbox!: EntityTable<OutboxRecord, "id">;
 
-  constructor() {
-    super(STORAGE.fieldDb);
+  constructor(name: string) {
+    super(name);
     this.version(1).stores({
       drafts: "id, updatedAt, syncState, idempotencyKey",
       photos: "id, draftId, fieldId, idempotencyKey",
@@ -57,7 +57,47 @@ class FieldDb extends Dexie {
   }
 }
 
-export const fieldDb = new FieldDb();
+export const fieldDb = new FieldDb(STORAGE.fieldDb);
+
+let migrated = false;
+
+/** One-time copy from the previous IndexedDB name so offline drafts survive rebrand. */
+export async function migrateLegacyFieldDb() {
+  if (migrated || typeof indexedDB === "undefined") return;
+  migrated = true;
+  try {
+    const names = await indexedDB.databases?.();
+    const hasLegacy = names?.some((db) => db.name === LEGACY_STORAGE.fieldDb) ?? true;
+    if (!hasLegacy) return;
+    const currentCount = await fieldDb.drafts.count();
+    if (currentCount > 0) return;
+
+    const legacy = new FieldDb(LEGACY_STORAGE.fieldDb);
+    await legacy.open();
+    const [drafts, photos, outbox] = await Promise.all([
+      legacy.drafts.toArray(),
+      legacy.photos.toArray(),
+      legacy.outbox.toArray(),
+    ]);
+    if (drafts.length === 0 && photos.length === 0 && outbox.length === 0) {
+      legacy.close();
+      return;
+    }
+    await fieldDb.transaction("rw", fieldDb.drafts, fieldDb.photos, fieldDb.outbox, async () => {
+      if (drafts.length) await fieldDb.drafts.bulkPut(drafts);
+      if (photos.length) await fieldDb.photos.bulkPut(photos);
+      if (outbox.length) {
+        for (const row of outbox) {
+          const { id: _id, ...rest } = row;
+          await fieldDb.outbox.add(rest);
+        }
+      }
+    });
+    legacy.close();
+  } catch {
+    // Ignore migration failures — fresh DB is still usable.
+  }
+}
 
 const listeners = new Set<() => void>();
 

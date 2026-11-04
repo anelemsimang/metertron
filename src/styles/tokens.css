@@ -1,63 +1,90 @@
 /*
-  MeterVault palette. Teal is the water mark, brass is the vault accent.
+  Metertron palette.
 
-  Contrast (WCAG AA, normal text 4.5:1), calculated:
-  - #ffffff on #0A6B74 = 6.2 (buttons: white text on the brand teal)
-  - #085860 on #ffffff = 7.4 (brand text and links on light surfaces)
-  - #8A5E16 on #ffffff = 5.7 (brass accent text on light surfaces)
-  - #7ED4DC on #0C1418 = 11.4 (brand text on the dark canvas)
-  - #F3F7F7 on #0C1418 = 16.8
+  Canonical tokens use --mt-*. Semantic UI tokens (--primary, --brand-text, …)
+  map onto them so existing components keep working.
+
+  Contrast (WCAG AA, normal text ≥ 4.5:1), approximate:
+  - #ffffff on #00849A (flow-deep buttons) ≈ 4.6
+  - #00849A on #ffffff (links) ≈ 4.6
+  - #0B1F33 on #F4F7F9 (body on light canvas) ≈ 16+
+  - #E8F7FA on #0B1F33 (light text on reservoir) ≈ 14+
+  - #A8E63A on #0B1F33 (verified on dark) ≈ 11+
+  - #5C6B70 muted on #ffffff ≈ 5.0
 */
 
 :root {
-  --primary: #0a6b74;
-  --primary-dark: #085860;
-  --primary-light: #0c7480;
-  --accent: #8a5e16;
-  --brand-text: #085860;
-  --on-primary: #ffffff;
+  --mt-reservoir: #0b1f33;
+  --mt-flow: #00b4c8;
+  --mt-flow-deep: #00849a;
+  --mt-verified: #a8e63a;
+  --mt-signal: #ffb020;
+  --mt-fault: #e5484d;
 
-  --text: #1c2a2e;
-  --muted: #5c6b70;
-  --canvas: #f3f7f7;
+  --mt-slate-50: #f4f7f9;
+  --mt-slate-100: #e8eef2;
+  --mt-slate-200: #d5dee5;
+  --mt-slate-300: #b8c5cf;
+  --mt-slate-400: #8a9bab;
+  --mt-slate-500: #667889;
+  --mt-slate-600: #4d5e6d;
+  --mt-slate-700: #3a4956;
+  --mt-slate-800: #243240;
+  --mt-slate-900: #121c26;
+
+  --primary: var(--mt-flow);
+  --primary-dark: var(--mt-flow-deep);
+  --primary-light: #33c3d3;
+  --accent: var(--mt-verified);
+  --brand-text: var(--mt-flow-deep);
+  --on-primary: #ffffff;
+  --success: var(--mt-verified);
+  --warning: var(--mt-signal);
+  --danger: var(--mt-fault);
+
+  --text: var(--mt-slate-900);
+  --muted: var(--mt-slate-600);
+  --canvas: var(--mt-slate-50);
   --surface: #ffffff;
   --sidebar: #ffffff;
-  --line: #d9e3e4;
-  --danger: #8f2430;
+  --line: var(--mt-slate-200);
 
-  --elevation-sm: 0 2px 4px rgba(12, 20, 24, 0.08);
-  --elevation-md: 0 4px 8px rgba(12, 20, 24, 0.12);
-  --elevation-lg: 0 8px 16px rgba(12, 20, 24, 0.16);
+  --elevation-sm: 0 1px 2px rgba(11, 31, 51, 0.06);
+  --elevation-md: 0 2px 6px rgba(11, 31, 51, 0.08);
+  --elevation-lg: 0 8px 20px rgba(11, 31, 51, 0.1);
 
+  --radius-ui: 10px;
   --touch: 48px;
   --office-sidebar: 248px;
   --field-bar: 64px;
 }
 
 [data-theme="dark"] {
-  --brand-text: #7ed4dc;
-  --accent: #e2b15a;
-  --on-primary: #ffffff;
-  --text: #f3f7f7;
-  --muted: #a8b6ba;
-  --canvas: #0c1418;
-  --surface: #152126;
-  --sidebar: #101a1e;
-  --line: #2a3c42;
-  --danger: #ffb4bc;
-  --elevation-sm: 0 2px 4px rgba(0, 0, 0, 0.35);
-  --elevation-md: 0 4px 8px rgba(0, 0, 0, 0.4);
-  --elevation-lg: 0 8px 16px rgba(0, 0, 0, 0.45);
+  --brand-text: #5ed4e0;
+  --primary: var(--mt-flow);
+  --primary-dark: #33c3d3;
+  --accent: var(--mt-verified);
+  --on-primary: var(--mt-reservoir);
+  --text: var(--mt-slate-50);
+  --muted: var(--mt-slate-300);
+  --canvas: var(--mt-reservoir);
+  --surface: var(--mt-slate-800);
+  --sidebar: #081826;
+  --line: var(--mt-slate-700);
+  --danger: #ff8a8e;
+  --elevation-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --elevation-md: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --elevation-lg: 0 8px 20px rgba(0, 0, 0, 0.45);
 }
 
 /* Outdoor reading. Dark text, hard edges, light ground. Scoped by the field shell. */
 [data-sunlight="on"] {
-  --brand-text: #064e56;
+  --brand-text: #006677;
   --on-primary: #ffffff;
   --text: #111111;
   --muted: #24292e;
   --canvas: #ffffff;
   --surface: #ffffff;
   --line: #111111;
-  --danger: #7a1020;
+  --danger: #b42318;
 }

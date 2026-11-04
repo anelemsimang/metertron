@@ -2,7 +2,9 @@
 @import "../styles/tokens.css";
 
 @theme inline {
-  --font-sans: var(--font-poppins), Poppins, sans-serif;
+  --font-sans: var(--font-sans), Inter, sans-serif;
+  --font-display: var(--font-display), "Space Grotesk", sans-serif;
+  --font-mono: var(--font-mono), "JetBrains Mono", monospace;
   --color-primary: var(--primary);
   --color-primary-dark: var(--primary-dark);
   --color-primary-light: var(--primary-light);
@@ -16,8 +18,10 @@
   --color-sidebar: var(--sidebar);
   --color-line: var(--line);
   --color-danger: var(--danger);
-  --radius-sm: 4px;
-  --radius-md: 8px;
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --radius-sm: 8px;
+  --radius-md: 10px;
   --radius-lg: 12px;
   --shadow-sm: var(--elevation-sm);
   --shadow-md: var(--elevation-md);
@@ -31,7 +35,7 @@ html {
 body {
   background: var(--canvas);
   color: var(--text);
-  font-family: var(--font-poppins), Poppins, sans-serif;
+  font-family: var(--font-sans), Inter, sans-serif;
   line-height: 1.6;
 }
 
@@ -40,11 +44,18 @@ body {
   outline-offset: 2px;
 }
 
+.font-mono-id {
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
 .section-title {
   position: relative;
   display: inline-block;
   padding-bottom: 10px;
-  font-weight: 700;
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
+  font-weight: 600;
   line-height: 1.2;
   color: var(--text);
 }
@@ -55,8 +66,8 @@ body {
   left: 0;
   bottom: 0;
   width: 60px;
-  height: 4px;
-  background: var(--accent);
+  height: 3px;
+  background: var(--mt-flow);
   border-radius: 2px;
 }
 
@@ -64,21 +75,21 @@ body {
   border-width: 2px;
 }
 
-.mv-loader-ring {
-  animation: mv-spin 1.05s linear infinite;
+.mt-loader-ring {
+  animation: mt-spin 1.05s linear infinite;
 }
 
-.mv-loader-mark {
-  animation: mv-rise 1.6s ease-in-out infinite;
+.mt-loader-mark {
+  animation: mt-rise 1.6s ease-in-out infinite;
 }
 
-@keyframes mv-spin {
+@keyframes mt-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-@keyframes mv-rise {
+@keyframes mt-rise {
   0%,
   100% {
     transform: translateY(1px);
@@ -89,9 +100,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mv-loader-ring,
-  .mv-loader-mark {
+  .mt-loader-ring,
+  .mt-loader-mark {
     animation: none;
   }
 }
-

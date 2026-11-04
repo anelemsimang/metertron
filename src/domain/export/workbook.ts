@@ -77,7 +77,7 @@ function mapCells(job: ExportJob): Array<string | null> {
 
 export async function buildExportWorkbook(jobs: ExportJob[]) {
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = "MeterVault";
+  workbook.creator = "Metertron";
   workbook.created = new Date();
   const sheet = workbook.addWorksheet(EXPORT_SHEET_NAME, {
     views: [{ state: "frozen", ySplit: 1 }],

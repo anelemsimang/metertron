@@ -1,4 +1,4 @@
-import { LogoMark } from "@/components/brand/logo";
+import { LogoMark, LogoWordmark } from "@/components/brand/logo";
 
 export function AppLoading({ label = "Loading", full = false }: { label?: string; full?: boolean }) {
   return (
@@ -13,27 +13,27 @@ export function AppLoading({ label = "Loading", full = false }: { label?: string
       }
     >
       <div className="relative h-[4.5rem] w-[4.5rem]">
-        <svg className="mv-loader-ring absolute inset-0 h-full w-full" viewBox="0 0 80 80" aria-hidden>
+        <svg className="mt-loader-ring absolute inset-0 h-full w-full" viewBox="0 0 80 80" aria-hidden>
           <circle cx="40" cy="40" r="34" fill="none" stroke="var(--line)" strokeWidth="4" />
           <circle
             cx="40"
             cy="40"
             r="34"
             fill="none"
-            stroke="var(--primary)"
+            stroke="var(--mt-flow)"
             strokeWidth="4"
             strokeLinecap="round"
             strokeDasharray="56 158"
           />
-          <circle cx="40" cy="6" r="3.2" fill="#C4892A" />
+          <circle cx="40" cy="6" r="3.2" fill="var(--mt-verified)" />
         </svg>
-        <div className="mv-loader-mark absolute inset-0 flex items-center justify-center">
+        <div className="mt-loader-mark absolute inset-0 flex items-center justify-center">
           <LogoMark className="h-11 w-11" />
         </div>
       </div>
       {full ? (
-        <p className="mt-5 text-lg font-bold tracking-tight">
-          Meter<span className="text-brand">Vault</span>
+        <p className="mt-5">
+          <LogoWordmark />
         </p>
       ) : null}
       <p className="mt-2 text-sm font-semibold text-muted">{label}</p>

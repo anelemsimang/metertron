@@ -7,7 +7,7 @@ import { buildExportWorkbook } from "./workbook";
 
 function job(overrides: Partial<ExportJob> = {}): ExportJob {
   return {
-    deployment: "Nimba",
+    deployment: "Acme Metering",
     enumerator: "amandan",
     exportedStatus: "Final",
     responseCode: "amandan-DMHYTS",
@@ -24,7 +24,7 @@ function job(overrides: Partial<ExportJob> = {}): ExportJob {
     jobDate: new Date(2025, 10, 1),
     installation: null,
     premise: null,
-    companyName: "Nimba",
+    companyName: "Acme Metering",
     cardNumber: null,
     jobNumber: null,
     houseNumber: "27",
@@ -81,7 +81,7 @@ test("workbook writes municipal headers plus OpenStreetMap columns", async () =>
   const headers = (sheet.getRow(1).values as Array<string | null | undefined>).slice(1);
   assert.deepEqual(headers.slice(0, EXPORT_HEADERS.length), [...EXPORT_HEADERS]);
   assert.deepEqual(headers.slice(EXPORT_HEADERS.length), [...MAP_EXPORT_HEADERS]);
-  assert.equal(sheet.getCell(2, 1).value, "Nimba");
+  assert.equal(sheet.getCell(2, 1).value, "Acme Metering");
   assert.equal(sheet.getCell(2, 33).value, "CZB988");
   assert.equal(sheet.getCell(2, 45).value, "https://files.example/meter.jpg");
   assert.equal(sheet.getCell(2, 47).value, -29.9403962);

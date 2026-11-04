@@ -126,7 +126,7 @@ export function OfficeShell({ children, user }: { children: ReactNode; user: { n
           })}
         </nav>
         <div className="border-t border-line p-3 text-xs text-muted">
-          {collapsed ? BRAND.mark : `${BRAND.name} · ${BRAND.location}`}
+          {collapsed ? BRAND.mark : BRAND.tagline}
         </div>
       </aside>
       <div className={collapsed ? "lg:pl-16" : "lg:pl-[248px]"}>

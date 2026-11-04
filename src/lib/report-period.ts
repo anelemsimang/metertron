@@ -67,7 +67,7 @@ export function pdfTitle(name: string, date: string) {
     .replace(/[^\x20-\x7E]/g, "")
     .replace(/\s+/g, " ")
     .trim();
-  return clean.slice(0, 120) || "MeterVault report";
+  return clean.slice(0, 120) || "Metertron report";
 }
 
 export function spanFilePart(span: ReportSpan | null) {

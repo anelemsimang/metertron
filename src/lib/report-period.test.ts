@@ -31,7 +31,7 @@ test("stock movements use the Johannesburg calendar day", () => {
 
 test("a pdf title keeps the name and date readable as a file", () => {
   assert.equal(pdfTitle("12 Point Road", "21 October 2026"), "12 Point Road 21 October 2026");
-  assert.equal(pdfTitle("MeterVault stock report", "October 2026"), "MeterVault stock report October 2026");
+  assert.equal(pdfTitle("Metertron stock report", "October 2026"), "Metertron stock report October 2026");
   assert.equal(pdfTitle("12/Point: Road", "21 October 2026"), "12 Point Road 21 October 2026");
 });
 

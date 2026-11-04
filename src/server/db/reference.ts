@@ -14,13 +14,28 @@ export function ensureOrganisation() {
 
 async function upsert() {
   const db = getDb();
+  const [existing] = await db.select().from(organisations).limit(1);
+  if (existing) {
+    const renameBrand =
+      existing.name === "MeterVault" ||
+      existing.legalName === "MeterVault" ||
+      existing.slug === "metervault";
+    if (!renameBrand) return { id: existing.id };
+    const [organisation] = await db
+      .update(organisations)
+      .set({
+        name: existing.name === "MeterVault" ? "Organisation" : existing.name,
+        legalName: existing.legalName === "MeterVault" ? "Organisation" : existing.legalName,
+        slug: existing.slug === "metervault" ? "tenant-1" : existing.slug,
+        updatedAt: new Date(),
+      })
+      .where(eq(organisations.id, existing.id))
+      .returning({ id: organisations.id });
+    return organisation;
+  }
   const [organisation] = await db
     .insert(organisations)
-    .values({ name: "MeterVault", legalName: "MeterVault", slug: "metervault" })
-    .onConflictDoUpdate({
-      target: organisations.slug,
-      set: { name: "MeterVault", legalName: "MeterVault", updatedAt: new Date() },
-    })
+    .values({ name: "Organisation", legalName: "Organisation", slug: "tenant-1" })
     .returning({ id: organisations.id });
   return organisation;
 }

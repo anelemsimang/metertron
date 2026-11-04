@@ -9,7 +9,7 @@ import { INSTALLATION_EXPORT, PREMISE_EXPORT, toExportRow } from "./map";
 
 function job(overrides: Partial<ExportJob> = {}): ExportJob {
   return {
-    deployment: "MeterVault",
+    deployment: "Metertron",
     enumerator: "KeeganM",
     exportedStatus: "Final",
     responseCode: "KeeganM-E442NZ",
@@ -26,7 +26,7 @@ function job(overrides: Partial<ExportJob> = {}): ExportJob {
     jobDate: new Date("2026-04-29T00:00:00"),
     installation: "meter_only",
     premise: "domestic",
-    companyName: "MeterVault",
+    companyName: "Metertron",
     cardNumber: null,
     jobNumber: null,
     houseNumber: "0",
@@ -79,7 +79,7 @@ test("enums export as the municipal strings", () => {
   assert.equal(INSTALLATION_EXPORT.non_straight, "Non-straight");
   assert.deepEqual(cell("Please select Business or Domestic"), { kind: "text", value: "Domestic" });
   assert.equal(PREMISE_EXPORT.business, "Business");
-  assert.deepEqual(cell("COMPANY NAME:"), { kind: "text", value: "MeterVault" });
+  assert.deepEqual(cell("COMPANY NAME:"), { kind: "text", value: "Metertron" });
 });
 
 test("a ticked fault is boolean true and an unticked fault is blank", () => {
@@ -107,7 +107,7 @@ test("ids keep their sample types", () => {
 });
 
 test("submit blocks missing evidence and warns on a swapped reading", () => {
-  const missing = validateForm(METER_CHANGE_V1, { companyName: "MeterVault" }, "submit");
+  const missing = validateForm(METER_CHANGE_V1, { companyName: "Metertron" }, "submit");
   assert.ok(blockingIssues(missing).some((issue) => issue.fieldId === "street"));
   assert.ok(blockingIssues(missing).some((issue) => issue.fieldId === "photoMeterNumber"));
   assert.ok(!blockingIssues(missing).some((issue) => issue.fieldId === "photoCiu"));

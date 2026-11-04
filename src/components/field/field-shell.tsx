@@ -5,8 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ClipboardList, Map, Plus, SunMedium, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
-import { LogoMark } from "@/components/brand/logo";
-import { BRAND, STORAGE } from "@/lib/brand";
+import { LogoMark, LogoWordmark } from "@/components/brand/logo";
+import { BRAND, readMigratedStorage, STORAGE } from "@/lib/brand";
 import { writeTechProfile } from "@/lib/field/profile";
 import { SyncPill } from "@/components/field/sync-pill";
 import { SyncProvider, useSyncStatus } from "@/components/field/sync-provider";
@@ -34,8 +34,7 @@ function FieldFrame({ children, user }: { children: ReactNode; user: { name: str
   const [sunlight, setSunlight] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE.sunlight) === "on";
-    setSunlight(stored);
+    setSunlight(readMigratedStorage("sunlight") === "on");
     writeTechProfile({ name: user.name, username: user.username });
     for (const tab of tabs) router.prefetch(tab.href);
   }, [router, user.name, user.username]);
@@ -54,9 +53,7 @@ function FieldFrame({ children, user }: { children: ReactNode; user: { name: str
             <Link href="/field" className="inline-flex min-h-14 min-w-0 items-center gap-2" aria-label={`${BRAND.name} jobs`}>
               <LogoMark className="h-9 w-9 shrink-0" />
               <span className="min-w-0">
-                <span className="block truncate text-lg font-bold leading-tight tracking-tight text-ink">
-                  Meter<span className="text-brand">Vault</span>
-                </span>
+                <LogoWordmark className="block truncate" />
                 <span className="block text-xs font-semibold text-muted">Field capture</span>
               </span>
             </Link>

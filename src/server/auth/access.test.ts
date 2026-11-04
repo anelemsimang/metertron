@@ -3,7 +3,7 @@ import test from "node:test";
 import { canMutateJob, canReadJob, exportStatuses, type Actor, type JobRef } from "./access";
 
 const contract = "ws7761";
-const org = "metervault";
+const org = "Metertron";
 
 function actor(overrides: Partial<Actor> = {}): Actor {
   return { userId: "tech-1", organisationId: org, orgRole: "member", grants: [{ contractId: contract, role: "technician" }], ...overrides };

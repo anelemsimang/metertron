@@ -3,8 +3,8 @@
 import { useId, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { AppLoading } from "@/components/brand/app-loading";
-import { LogoMark } from "@/components/brand/logo";
-import { STORAGE } from "@/lib/brand";
+import { LogoLockup } from "@/components/brand/logo";
+import { BRAND, STORAGE } from "@/lib/brand";
 import { Suspense } from "react";
 
 function LoginForm() {
@@ -50,14 +50,9 @@ function LoginForm() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-canvas px-4 py-10 text-ink">
       <form onSubmit={submit} className="w-full max-w-md rounded-lg border border-line bg-surface p-6 shadow-md">
-        <div className="flex items-center gap-3">
-          <LogoMark className="h-10 w-10" />
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">
-              Meter<span className="text-brand">Vault</span>
-            </h1>
-            <p className="text-sm text-muted">Field capture and the manager dashboard are separate.</p>
-          </div>
+        <div>
+          <LogoLockup />
+          <p className="mt-2 text-sm text-muted">{BRAND.tagline}</p>
         </div>
         <div className="mt-6 grid grid-cols-2 rounded-md bg-canvas p-1 text-sm font-semibold">
           <button type="button" onClick={() => { setMode("login"); setError(""); }} className={`min-h-10 rounded-md ${mode === "login" ? "bg-surface text-ink shadow-sm" : "text-muted"}`}>
@@ -164,7 +159,7 @@ function Field({ label, value, onChange, type = "text", autoComplete }: { label:
 
 function ButtonSpinner() {
   return (
-    <svg className="mv-loader-ring h-5 w-5" viewBox="0 0 80 80" aria-hidden>
+    <svg className="mt-loader-ring h-5 w-5" viewBox="0 0 80 80" aria-hidden>
       <circle cx="40" cy="40" r="30" fill="none" stroke="currentColor" strokeWidth="10" opacity="0.35" />
       <circle cx="40" cy="40" r="30" fill="none" stroke="currentColor" strokeWidth="10" strokeLinecap="round" strokeDasharray="46 150" />
     </svg>
@@ -173,7 +168,7 @@ function ButtonSpinner() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<AppLoading full label="Opening MeterVault" />}>
+    <Suspense fallback={<AppLoading full label="Opening Metertron" />}>
       <LoginForm />
     </Suspense>
   );

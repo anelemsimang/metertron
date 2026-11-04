@@ -6,7 +6,7 @@ import test from "node:test";
 import { createInbox } from "./inbox";
 
 test("a retried job keeps the first id", async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), "metervault-inbox-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "Metertron-inbox-"));
   const inbox = createInbox(dir);
   const first = await inbox.acceptJob("job-1", { meter: "CZZ863" });
   const second = await inbox.acceptJob("job-1", { meter: "CZZ863" });
@@ -17,7 +17,7 @@ test("a retried job keeps the first id", async () => {
 });
 
 test("a retried photo is stored once", async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), "metervault-inbox-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "Metertron-inbox-"));
   const inbox = createInbox(dir);
   const bytes = Buffer.from("photo");
   const first = await inbox.acceptPhoto("photo-1", bytes);

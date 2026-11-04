@@ -7,9 +7,9 @@ type Sql = ReturnType<typeof postgres>;
 const poolSettings = "max2-idle60-connect30";
 
 const globalForDb = globalThis as unknown as {
-  metervaultSql?: Sql;
-  metervaultUrl?: string;
-  metervaultPool?: string;
+  metertronSql?: Sql;
+  metertronUrl?: string;
+  metertronPool?: string;
 };
 
 export function databaseUrl() {
@@ -19,26 +19,26 @@ export function databaseUrl() {
 }
 
 export function resetDb() {
-  void globalForDb.metervaultSql?.end({ timeout: 1 });
-  globalForDb.metervaultSql = undefined;
+  void globalForDb.metertronSql?.end({ timeout: 1 });
+  globalForDb.metertronSql = undefined;
 }
 
 export function getDb() {
   const url = databaseUrl();
   const supabase = url.includes("supabase");
-  if (globalForDb.metervaultUrl !== url || globalForDb.metervaultPool !== poolSettings) {
+  if (globalForDb.metertronUrl !== url || globalForDb.metertronPool !== poolSettings) {
     resetDb();
-    globalForDb.metervaultUrl = url;
-    globalForDb.metervaultPool = poolSettings;
+    globalForDb.metertronUrl = url;
+    globalForDb.metertronPool = poolSettings;
   }
-  globalForDb.metervaultSql ??= postgres(url, {
+  globalForDb.metertronSql ??= postgres(url, {
     max: 2,
     idle_timeout: 60,
     connect_timeout: 30,
     prepare: !supabase,
     ssl: supabase ? "require" : undefined,
   });
-  return drizzle(globalForDb.metervaultSql, { schema });
+  return drizzle(globalForDb.metertronSql, { schema });
 }
 
 const transientCodes = new Set(["CONNECT_TIMEOUT", "ENOTFOUND", "EAI_AGAIN", "ETIMEDOUT", "ECONNRESET", "ECONNREFUSED"]);

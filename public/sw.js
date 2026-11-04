@@ -1,4 +1,4 @@
-const CACHE = "metervault-field-v1";
+const CACHE = "Metertron-field-v1";
 const SHELL = ["/field", "/field/capture", "/field/account", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
@@ -25,7 +25,7 @@ self.addEventListener("fetch", (event) => {
 });
 
 self.addEventListener("sync", (event) => {
-  if (event.tag !== "metervault-outbox") return;
+  if (event.tag !== "Metertron-outbox") return;
   event.waitUntil(
     self.clients.matchAll({ includeUncontrolled: true }).then((clients) => {
       clients.forEach((client) => client.postMessage({ type: "flush-outbox" }));

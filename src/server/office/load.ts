@@ -90,7 +90,7 @@ async function currentOrganisation() {
   const [organisation] = await db.select({ name: organisations.name }).from(organisations).where(eq(organisations.id, user.organisationId)).limit(1);
   return {
     user,
-    organisationName: organisation?.name ?? "MeterVault",
+    organisationName: organisation?.name ?? "Metertron",
   };
 }
 

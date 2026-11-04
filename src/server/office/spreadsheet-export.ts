@@ -201,7 +201,7 @@ export async function buildCaptureSpreadsheet(organisationId: string, span: Repo
     const phrases = row.listPhrases ?? LIST_PHRASES;
     const approved = row.status === "approved";
     return {
-      deployment: row.deploymentName ?? row.companyFromContract ?? row.companyName ?? "MeterVault",
+      deployment: row.deploymentName ?? row.companyFromContract ?? row.companyName ?? "Metertron",
       enumerator: row.enumeratorUsername ?? "",
       exportedStatus: approved ? (row.statusExportValue ?? "Final") : null,
       responseCode: row.responseCode,
@@ -281,11 +281,11 @@ function spreadsheetFilename(
     const filled = contract.pattern
       .replaceAll("{municipality}", contract.municipalityName ?? "Municipality")
       .replaceAll("{code}", contract.code ?? "contract")
-      .replaceAll("{company}", contract.companyName ?? "MeterVault")
-      .replaceAll("{deployment}", contract.deploymentName ?? "MeterVault")
+      .replaceAll("{company}", contract.companyName ?? "Metertron")
+      .replaceAll("{deployment}", contract.deploymentName ?? "Metertron")
       .replaceAll("{date}", datePart.replace(/^-/, ""));
     return filled.endsWith(".xlsx") ? filled : `${filled}.xlsx`;
   }
-  const company = contract?.companyName ?? contract?.deploymentName ?? "MeterVault";
+  const company = contract?.companyName ?? contract?.deploymentName ?? "Metertron";
   return `${company}${datePart}.xlsx`;
 }

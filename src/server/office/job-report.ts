@@ -11,13 +11,14 @@ const PAGE_H = 841.89;
 const MARGIN = 40;
 const BOTTOM = 40;
 const CONTENT_W = PAGE_W - MARGIN * 2;
-const TEAL = rgb(0.039, 0.42, 0.455);
-const BRASS = rgb(0.541, 0.369, 0.086);
-const INK = rgb(0.1, 0.14, 0.15);
-const MUTED = rgb(0.35, 0.4, 0.42);
-const LINE = rgb(0.82, 0.86, 0.86);
+/** Metertron --mt-reservoir / --mt-flow / --mt-verified */
+const TEAL = rgb(0.043, 0.122, 0.2);
+const ACCENT = rgb(0, 0.706, 0.784);
+const INK = rgb(0.071, 0.11, 0.149);
+const MUTED = rgb(0.302, 0.369, 0.427);
+const LINE = rgb(0.835, 0.871, 0.898);
 const WHITE = rgb(1, 1, 1);
-const DANGER = rgb(0.62, 0.16, 0.14);
+const DANGER = rgb(0.898, 0.282, 0.302);
 
 type Draw = {
   doc: PDFDocument;
@@ -58,7 +59,7 @@ function wrap(text: string, font: PDFFont, size: number, width: number) {
 function addPage(draw: Draw) {
   draw.page = draw.doc.addPage([PAGE_W, PAGE_H]);
   draw.page.drawRectangle({ x: 0, y: PAGE_H - 28, width: PAGE_W, height: 28, color: TEAL });
-  draw.page.drawText("MeterVault", { x: MARGIN, y: PAGE_H - 18, size: 10, font: draw.bold, color: WHITE });
+  draw.page.drawText("Metertron", { x: MARGIN, y: PAGE_H - 18, size: 10, font: draw.bold, color: WHITE });
   draw.page.drawText("Job report", { x: MARGIN + 72, y: PAGE_H - 18, size: 10, font: draw.font, color: WHITE });
   draw.cursor = 46;
 }
@@ -74,7 +75,7 @@ function text(draw: Draw, value: string, x: number, size: number, font: PDFFont,
 
 function section(draw: Draw, title: string) {
   ensure(draw, 28);
-  text(draw, title.toUpperCase(), 0, 11, draw.bold, BRASS);
+  text(draw, title.toUpperCase(), 0, 11, draw.bold, ACCENT);
   draw.cursor += 16;
   draw.page.drawRectangle({ x: MARGIN, y: PAGE_H - draw.cursor, width: CONTENT_W, height: 1, color: LINE });
   draw.cursor += 12;
@@ -97,7 +98,7 @@ function facts(draw: Draw, rows: { label: string; value: string }[]) {
 function statusColor(status: string) {
   if (status === "approved") return TEAL;
   if (status === "rejected") return DANGER;
-  return BRASS;
+  return ACCENT;
 }
 
 async function drawPhoto(draw: Draw, doc: PDFDocument, caption: string, bytes: Uint8Array | null) {
@@ -187,7 +188,7 @@ export async function renderJobReport(job: JobRecord, preparedBy: string, photos
   const pages = doc.getPages();
   pages.forEach((page, index) => {
     page.drawText(`Page ${index + 1} of ${pages.length}`, { x: MARGIN, y: 18, size: 8, font: draw.font, color: MUTED });
-    const label = "MeterVault  |  Durban  |  Internal job record";
+    const label = "Metertron  |  Internal job record";
     page.drawText(label, { x: PAGE_W - MARGIN - draw.font.widthOfTextAtSize(label, 8), y: 18, size: 8, font: draw.font, color: MUTED });
   });
   const title = jobReportTitle(job);

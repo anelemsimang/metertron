@@ -11,8 +11,8 @@ const PAGE_H = 841.89;
 const MARGIN = 40;
 const BOTTOM = 40;
 const CONTENT_W = PAGE_W - MARGIN * 2;
-const TEAL = rgb(0.039, 0.42, 0.455);
-const BRASS = rgb(0.541, 0.369, 0.086);
+const TEAL = rgb(0.043, 0.122, 0.2);
+const ACCENT = rgb(0, 0.706, 0.784);
 const INK = rgb(0.1, 0.14, 0.15);
 const MUTED = rgb(0.35, 0.4, 0.42);
 const LINE = rgb(0.82, 0.86, 0.86);
@@ -226,7 +226,7 @@ export async function loadStockReport(organisationId: string, preparedBy: string
           .join(" ")
       : `No stock moved ${during}.`;
     return {
-      organisationName: organisation?.name ?? "MeterVault",
+      organisationName: organisation?.name ?? "Metertron",
       preparedBy,
       generatedAt: now,
       periodLabel: spanLabel(span),
@@ -263,7 +263,7 @@ export async function loadStockReport(organisationId: string, preparedBy: string
     : "Nothing has been received into stock yet.";
 
   return {
-    organisationName: organisation?.name ?? "MeterVault",
+    organisationName: organisation?.name ?? "Metertron",
     preparedBy,
     generatedAt: now,
     periodLabel: "",
@@ -329,7 +329,7 @@ type Draw = {
 function addPage(draw: Draw) {
   draw.page = draw.doc.addPage([PAGE_W, PAGE_H]);
   draw.page.drawRectangle({ x: 0, y: PAGE_H - 28, width: PAGE_W, height: 28, color: TEAL });
-  draw.page.drawText("MeterVault", { x: MARGIN, y: PAGE_H - 18, size: 10, font: draw.bold, color: WHITE });
+  draw.page.drawText("Metertron", { x: MARGIN, y: PAGE_H - 18, size: 10, font: draw.bold, color: WHITE });
   draw.page.drawText("Stock report", { x: MARGIN + 72, y: PAGE_H - 18, size: 10, font: draw.font, color: WHITE });
   draw.cursor = 46;
 }
@@ -345,7 +345,7 @@ function text(draw: Draw, value: string, x: number, size: number, font: PDFFont,
 
 function section(draw: Draw, title: string, note: string) {
   ensure(draw, 36);
-  text(draw, title.toUpperCase(), 0, 11, draw.bold, BRASS);
+  text(draw, title.toUpperCase(), 0, 11, draw.bold, ACCENT);
   draw.cursor += 16;
   draw.page.drawRectangle({ x: MARGIN, y: PAGE_H - draw.cursor, width: CONTENT_W, height: 1, color: LINE });
   draw.cursor += 12;
@@ -504,7 +504,7 @@ export async function renderStockReport(report: StockReportData) {
   const pages = doc.getPages();
   pages.forEach((page, index) => {
     page.drawText(`Page ${index + 1} of ${pages.length}`, { x: MARGIN, y: 18, size: 8, font: draw.font, color: MUTED });
-    const label = "MeterVault  |  Durban  |  Internal stock record";
+    const label = "Metertron  |  Internal stock record";
     const labelWidth = draw.font.widthOfTextAtSize(label, 8);
     page.drawText(label, { x: PAGE_W - MARGIN - labelWidth, y: 18, size: 8, font: draw.font, color: MUTED });
   });
@@ -516,7 +516,7 @@ export async function renderStockReport(report: StockReportData) {
 
 export function stockReportTitle(report: Pick<StockReportData, "periodLabel" | "generatedAt">) {
   const date = report.periodLabel || spanLabel({ mode: "day", date: todayInZone(report.generatedAt) });
-  return pdfTitle("MeterVault stock report", date);
+  return pdfTitle("Metertron stock report", date);
 }
 
 export async function buildStockReportPdf(organisationId: string, preparedBy: string, span: ReportSpan | null = null) {
