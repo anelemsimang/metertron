@@ -2,6 +2,8 @@ import { eq } from "drizzle-orm";
 import { requireSession } from "@/server/auth/require-admin";
 import { getDb, safeDbMessage, withOrg } from "@/server/db/client";
 import { organisations } from "@/server/db/schema";
+import { ensureDefaultContract } from "@/server/templates/contracts";
+import { ensureBuiltinExportTemplates } from "@/server/templates/export";
 
 export async function GET() {
   const gate = await requireSession();
@@ -72,6 +74,10 @@ export async function POST(request: Request) {
           name: organisations.name,
           onboardingCompletedAt: organisations.onboardingCompletedAt,
         });
+      if (complete) {
+        await ensureBuiltinExportTemplates(gate.user.organisationId);
+        await ensureDefaultContract(gate.user.organisationId);
+      }
       return Response.json({ organisation });
     });
   } catch (error) {

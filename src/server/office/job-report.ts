@@ -11,12 +11,12 @@ const PAGE_H = 841.89;
 const MARGIN = 40;
 const BOTTOM = 40;
 const CONTENT_W = PAGE_W - MARGIN * 2;
-/** Metertron --mt-reservoir / --mt-flow / --mt-verified */
-const TEAL = rgb(0.043, 0.122, 0.2);
-const ACCENT = rgb(0, 0.706, 0.784);
-const INK = rgb(0.071, 0.11, 0.149);
-const MUTED = rgb(0.302, 0.369, 0.427);
-const LINE = rgb(0.835, 0.871, 0.898);
+/** Metertron --mt-grove / --mt-leaf / --mt-citrus */
+const TEAL = rgb(0.055, 0.239, 0.141);
+const ACCENT = rgb(0.08, 0.478, 0.271);
+const INK = rgb(0.078, 0.141, 0.102);
+const MUTED = rgb(0.302, 0.38, 0.337);
+const LINE = rgb(0.843, 0.886, 0.859);
 const WHITE = rgb(1, 1, 1);
 const DANGER = rgb(0.898, 0.282, 0.302);
 

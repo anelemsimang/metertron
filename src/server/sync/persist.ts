@@ -58,7 +58,8 @@ export async function acceptSyncedJob(idempotencyKey: string, answers: Record<st
       ? await db
           .select({ id: formVersions.id })
           .from(formVersions)
-          .where(and(eq(formVersions.contractId, contract.id), eq(formVersions.key, "meter-change"), eq(formVersions.version, 1)))
+          .where(and(eq(formVersions.contractId, contract.id), eq(formVersions.key, "meter-change"), eq(formVersions.status, "published")))
+          .orderBy(sql`${formVersions.version} desc`)
           .limit(1)
       : [];
     const townName = text(answers.townId);

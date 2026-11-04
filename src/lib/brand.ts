@@ -8,14 +8,15 @@ export const BRAND = {
   fieldDescription: "Meter-change capture for Metertron field technicians.",
   officeAppName: "Metertron Manager",
   officeDescription: "Review captures, stock, and municipal exports.",
-  themeColor: "#00B4C8",
-  backgroundColor: "#F4F7F9",
-  reservoir: "#0B1F33",
-  flow: "#00B4C8",
-  flowDeep: "#00849A",
-  verified: "#A8E63A",
-  signal: "#FFB020",
-  fault: "#E5484D",
+  themeColor: "#147A45",
+  backgroundColor: "#F7FAF8",
+  grove: "#0E3D24",
+  leaf: "#147A45",
+  leafDeep: "#0F5C34",
+  citrus: "#F07A1A",
+  citrusDeep: "#C45A08",
+  mist: "#E8F5EE",
+  fault: "#D92D20",
 } as const;
 
 export const STORAGE = {

@@ -1,9 +1,9 @@
-import { METER_CHANGE_V1 } from "@/domain/forms/meter-change-v1";
 import { normaliseAnswers } from "@/domain/forms/normalise";
 import { blockingIssues, validateForm } from "@/domain/forms/validate";
 import { getSessionUser } from "@/server/auth/session";
-import { safeDbMessage } from "@/server/db/client";
+import { safeDbMessage, withOrg } from "@/server/db/client";
 import { acceptSyncedJob } from "@/server/sync/persist";
+import { resolveFieldForm } from "@/server/templates/forms";
 
 export async function POST(request: Request) {
   const user = await getSessionUser();
@@ -15,14 +15,17 @@ export async function POST(request: Request) {
   if (!body.idempotencyKey || !body.answers) {
     return Response.json({ error: "Missing job." }, { status: 400 });
   }
-  const answers = normaliseAnswers(METER_CHANGE_V1, body.answers);
-  const issues = blockingIssues(validateForm(METER_CHANGE_V1, answers, "submit"));
-  if (issues.length > 0) {
-    return Response.json({ error: "Job is incomplete.", issues }, { status: 422 });
-  }
   try {
-    const saved = await acceptSyncedJob(body.idempotencyKey, answers, user);
-    return Response.json(saved);
+    return await withOrg(user.organisationId, async () => {
+      const form = await resolveFieldForm(user.organisationId);
+      const answers = normaliseAnswers(form, body.answers!);
+      const issues = blockingIssues(validateForm(form, answers, "submit"));
+      if (issues.length > 0) {
+        return Response.json({ error: "Job is incomplete.", issues }, { status: 422 });
+      }
+      const saved = await acceptSyncedJob(body.idempotencyKey!, answers, user);
+      return Response.json(saved);
+    });
   } catch (error) {
     const cause = error instanceof Error && "cause" in error ? error.cause : error;
     const detail = cause instanceof Error ? cause.message : safeDbMessage(error);

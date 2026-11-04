@@ -115,8 +115,13 @@ const producers: Record<ExportHeader, (job: ExportJob) => ExportCell> = {
   "INSTALLATION DONE BY:": (job) => optionalText(job.installerName),
 };
 
-export function toExportRow(job: ExportJob): ExportCell[] {
-  return EXPORT_HEADERS.map((header) => producers[header](job));
+export function cellForHeader(job: ExportJob, header: string): ExportCell {
+  const producer = producers[header as ExportHeader];
+  return producer ? producer(job) : blank();
+}
+
+export function toExportRow(job: ExportJob, headers: readonly string[] = EXPORT_HEADERS): ExportCell[] {
+  return headers.map((header) => cellForHeader(job, header));
 }
 
 export { FAULT_EXPORT, INSTALLATION_EXPORT, PREMISE_EXPORT };

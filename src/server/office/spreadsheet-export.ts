@@ -17,6 +17,7 @@ import {
   towns,
   users,
 } from "@/server/db/schema";
+import { getDefaultExportTemplate, workbookConfigFromTemplate } from "@/server/templates/export";
 
 const INSTALLATIONS = new Set<InstallationCode>(["meter_only", "white_and_blue_box", "non_straight"]);
 const PREMISES = new Set<PremiseCode>(["business", "domestic"]);
@@ -198,13 +199,14 @@ export async function buildCaptureSpreadsheet(organisationId: string, span: Repo
     photosByJob.set(photo.jobId, bucket);
   }
 
+  const template = await getDefaultExportTemplate(organisationId);
   const exportJobs: ExportJob[] = rows.map((row) => {
-    const phrases = row.listPhrases ?? LIST_PHRASES;
+    const phrases = template?.listPhrases ?? row.listPhrases ?? LIST_PHRASES;
     const approved = row.status === "approved";
     return {
       deployment: row.deploymentName ?? row.companyFromContract ?? row.companyName ?? "Metertron",
       enumerator: row.enumeratorUsername ?? "",
-      exportedStatus: approved ? (row.statusExportValue ?? "Final") : null,
+      exportedStatus: approved ? (template?.statusExportValue ?? row.statusExportValue ?? "Final") : null,
       responseCode: row.responseCode,
       draftedOn: row.draftedOn,
       submittedOn: row.submittedOn,
@@ -250,7 +252,7 @@ export async function buildCaptureSpreadsheet(organisationId: string, span: Repo
 
   const sample = rows[0];
   return {
-    buffer: await buildExportWorkbook(exportJobs),
+    buffer: await buildExportWorkbook(exportJobs, workbookConfigFromTemplate(template)),
     filename: spreadsheetFilename(
       sample
         ? {

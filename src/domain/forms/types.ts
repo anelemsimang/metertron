@@ -48,7 +48,7 @@ export type FormSection = {
 };
 
 export type FormDefinition = {
-  key: "meter-change";
+  key: string;
   version: number;
   sections: FormSection[];
 };

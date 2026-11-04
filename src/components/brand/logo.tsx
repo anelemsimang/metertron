@@ -1,9 +1,10 @@
-/** Metertron mark: dial + droplet needle + verification check. */
+/** Metertron mark: green dial plate, white face, orange needle — measured and ready. */
 
-const FLOW = "#00B4C8";
-const RESERVOIR = "#0B1F33";
-const VERIFIED = "#A8E63A";
-const LIGHT = "#E8F7FA";
+const GROVE = "#0E3D24";
+const LEAF = "#147A45";
+const CITRUS = "#F07A1A";
+const WHITE = "#FFFFFF";
+const MIST = "#E8F5EE";
 
 export function LogoMark({
   className = "h-8 w-8",
@@ -15,29 +16,30 @@ export function LogoMark({
   /** `white` for dark backgrounds; `dark` for light backgrounds without colour fill */
   mono?: "white" | "dark";
 }) {
-  const plate = mono === "white" ? "transparent" : mono === "dark" ? "transparent" : RESERVOIR;
-  const dial = mono === "white" ? "#ffffff" : mono === "dark" ? RESERVOIR : LIGHT;
-  const drop = mono === "white" ? "#ffffff" : mono === "dark" ? RESERVOIR : FLOW;
-  const check = mono === "white" ? "#ffffff" : mono === "dark" ? RESERVOIR : VERIFIED;
-  const stroke = mono ? undefined : RESERVOIR;
+  const plate = mono === "white" ? "transparent" : mono === "dark" ? "transparent" : GROVE;
+  const dial = mono === "white" ? WHITE : mono === "dark" ? GROVE : MIST;
+  const ring = mono === "white" ? WHITE : mono === "dark" ? GROVE : LEAF;
+  const needle = mono === "white" ? WHITE : mono === "dark" ? GROVE : CITRUS;
+  const hub = mono === "white" ? GROVE : mono === "dark" ? WHITE : WHITE;
 
   return (
     <svg viewBox="0 0 64 64" className={className} role={label ? "img" : undefined} aria-hidden={label ? undefined : true} aria-label={label}>
       {mono ? null : <rect width="64" height="64" rx="14" fill={plate} />}
-      {/* Outer dial */}
-      <circle cx="32" cy="30" r="18" fill="none" stroke={dial} strokeWidth="2.5" />
+      {/* Dial face */}
+      <circle cx="32" cy="32" r="20" fill={mono ? "none" : dial} stroke={ring} strokeWidth="2.75" />
       {/* Tick marks */}
-      <path d="M32 14v3.5M46 30h-3.5M32 46v-3.5M18 30h3.5" stroke={dial} strokeWidth="2" strokeLinecap="round" />
-      {/* Droplet needle (pointing up-right, reads as meter needle + water) */}
       <path
-        d="M32 22c5.5 6.2 8.5 9.8 8.5 13.8a8.5 8.5 0 1 1-17 0c0-4 3-7.6 8.5-13.8z"
-        fill={drop}
-        stroke={stroke}
-        strokeWidth={mono ? 0 : 0.5}
+        d="M32 14v4M48 32h-4M32 50v-4M16 32h4M43.3 20.7l-2.8 2.8M43.3 43.3l-2.8-2.8M20.7 43.3l2.8-2.8M20.7 20.7l2.8 2.8"
+        stroke={ring}
+        strokeWidth="2"
+        strokeLinecap="round"
       />
-      <circle cx="32" cy="36.5" r="2.6" fill={mono === "white" ? RESERVOIR : mono === "dark" ? "#ffffff" : RESERVOIR} />
-      {/* Verification check at base */}
-      <path d="M24 52.5l4 4 12-11" fill="none" stroke={check} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Orange needle — bold brand accent */}
+      <path d="M32 32 L44 18" stroke={needle} strokeWidth="3.5" strokeLinecap="round" />
+      <circle cx="32" cy="32" r="4" fill={needle} />
+      <circle cx="32" cy="32" r="1.8" fill={hub} />
+      {/* Base bar — green confidence stripe */}
+      {!mono ? <rect x="18" y="54" width="28" height="3.5" rx="1.75" fill={LEAF} /> : null}
     </svg>
   );
 }

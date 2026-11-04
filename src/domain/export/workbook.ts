@@ -9,6 +9,12 @@ const ZONE = "Africa/Johannesburg";
 
 export { MAP_EXPORT_HEADERS };
 
+export type ExportWorkbookTemplate = {
+  sheetName?: string;
+  headers?: string[];
+  mapHeaders?: string[];
+};
+
 function zoneParts(date: Date) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: ZONE,
@@ -71,28 +77,33 @@ function mapUrl(photo: PhotoEvidence | null | undefined) {
   return openStreetMapUrl(photo.latitude, photo.longitude);
 }
 
-function mapCells(job: ExportJob): Array<string | null> {
+/** Default OpenStreetMap columns for the three GPS photo slots. */
+function defaultMapCells(job: ExportJob): Array<string | null> {
   return [mapUrl(job.photos.meterNumber), mapUrl(job.photos.waterPoint), mapUrl(job.photos.ciu)];
 }
 
-export async function buildExportWorkbook(jobs: ExportJob[]) {
+export async function buildExportWorkbook(jobs: ExportJob[], template?: ExportWorkbookTemplate) {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Metertron";
   workbook.created = new Date();
-  const sheet = workbook.addWorksheet(EXPORT_SHEET_NAME, {
+  const sheetName = template?.sheetName?.trim() || EXPORT_SHEET_NAME;
+  const municipalHeaders = template?.headers?.length ? template.headers : [...EXPORT_HEADERS];
+  const mapHeaders = template?.mapHeaders ?? [...MAP_EXPORT_HEADERS];
+  const headers = [...municipalHeaders, ...mapHeaders];
+  const sheet = workbook.addWorksheet(sheetName, {
     views: [{ state: "frozen", ySplit: 1 }],
   });
-  const headers = [...EXPORT_HEADERS, ...MAP_EXPORT_HEADERS];
   sheet.addRow(headers);
   const headerRow = sheet.getRow(1);
   headerRow.font = { bold: true };
   for (const job of jobs) {
-    const values = toExportRow(job);
+    const values = toExportRow(job, municipalHeaders);
     const row = sheet.addRow(new Array(headers.length).fill(null));
     values.forEach((value, index) => writeCell(row.getCell(index + 1), value));
-    mapCells(job).forEach((url, index) => {
-      const cell = row.getCell(EXPORT_HEADERS.length + index + 1);
-      cell.value = url;
+    const maps = defaultMapCells(job);
+    mapHeaders.forEach((_, index) => {
+      const cell = row.getCell(municipalHeaders.length + index + 1);
+      cell.value = maps[index] ?? null;
     });
   }
   sheet.columns.forEach((column) => {

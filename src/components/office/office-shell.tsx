@@ -4,12 +4,14 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ClipboardList,
   FileSpreadsheet,
   LayoutDashboard,
   ListChecks,
   Map,
   Package,
   PanelLeft,
+  Settings2,
   ShieldCheck,
   Users,
   Waypoints,
@@ -29,6 +31,8 @@ const nav = [
   { href: "/office/work-orders", label: "Work orders", icon: Waypoints, key: "G W" },
   { href: "/office/stock", label: "Stock", icon: Package, key: "G S" },
   { href: "/office/exports", label: "Exports", icon: FileSpreadsheet, key: "G E" },
+  { href: "/office/templates", label: "Templates", icon: ClipboardList, key: "G X" },
+  { href: "/office/forms", label: "Forms", icon: Settings2, key: "G F" },
   { href: "/office/map", label: "Map", icon: Map, key: "G M" },
 ];
 
@@ -41,6 +45,8 @@ const go = {
   w: "/office/work-orders",
   s: "/office/stock",
   e: "/office/exports",
+  x: "/office/templates",
+  f: "/office/forms",
   m: "/office/map",
 } as const;
 

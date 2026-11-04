@@ -14,15 +14,16 @@ Defined in `src/styles/tokens.css` as `--mt-*` (canonical) and mapped to semanti
 
 | Token | Hex | Use |
 |-------|-----|-----|
-| `--mt-reservoir` | `#0B1F33` | Primary dark, headers, dark backgrounds |
-| `--mt-flow` | `#00B4C8` | Primary brand / CTA |
-| `--mt-flow-deep` | `#00849A` | Hover, links on light bg |
-| `--mt-verified` | `#A8E63A` | Success, verified states, accents |
-| `--mt-signal` | `#FFB020` | Warnings, pending |
-| `--mt-fault` | `#E5484D` | Errors, failed validation |
-| `--mt-slate-50…900` | neutral scale | Surfaces, borders, body text |
+| `--mt-grove` | `#0E3D24` | Primary dark, headers, logo plate |
+| `--mt-leaf` | `#147A45` | Primary brand / CTA |
+| `--mt-leaf-deep` | `#0F5C34` | Hover, links on light bg |
+| `--mt-citrus` | `#F07A1A` | Accent, warnings, logo needle |
+| `--mt-citrus-deep` | `#C45A08` | Accent hover |
+| `--mt-mist` | `#E8F5EE` | Soft green tint, dial face |
+| `--mt-fault` | `#D92D20` | Errors |
+| `--mt-slate-50…900` | green-tinted neutrals | Surfaces, borders, body text |
 
-Light and dark themes both meet WCAG AA for body text pairs (see comments in `tokens.css`).
+Surfaces default to **white**; canvas is a light green-tinted off-white (`#F7FAF8`).
 
 ---
 
@@ -38,7 +39,7 @@ Light and dark themes both meet WCAG AA for body text pairs (see comments in `to
 
 ## Logo
 
-**Mark:** Circular meter dial; needle forms a water droplet; small check at the base (measured and verified). Readable at 16px.  
+**Mark:** Deep green rounded square; white/mist dial face; **orange needle** as the brand accent; green confidence bar at the base. Readable at 16px.  
 **Wordmark:** `metertron` lowercase, Space Grotesk medium, slightly tight tracking.
 
 ### Deliverables
@@ -48,22 +49,16 @@ Light and dark themes both meet WCAG AA for body text pairs (see comments in `to
 | Mark SVG (component) | `src/components/brand/logo.tsx` |
 | Mark / lockup SVGs | `public/brand/*.svg` |
 | Favicon / PWA icons | `public/icons/*` |
-| Apple touch | `public/icons/apple-touch-icon.png` |
-| Splash | `public/splash.png` |
-| OG default 1200×630 | `public/brand/og-default.png` |
-| Email header | `public/brand/email-header.png` |
 | Icon generator | `scripts/render-brand-icons.mjs` |
-
-Variants: full horizontal lockup, stacked lockup, mark only, mono white, mono dark.
 
 ---
 
 ## UI style
 
 - Clean, data-dense, calm  
+- Green CTAs, orange for attention/pending  
 - 8px spacing grid; 10–12px radius  
 - Subtle 1px borders over heavy shadows  
-- Status pills use token colours  
-- Icons: Lucide (existing)
+- Icons: Lucide
 
 Platform UI always shows Metertron branding. Tenant logos appear on that tenant’s exports and reports only.

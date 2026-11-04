@@ -1,11 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 64" role="img" aria-label="metertron">
   <g transform="translate(0 0)">
-  <rect width="64" height="64" rx="14" fill="#0B1F33"/>
-  <circle cx="32" cy="30" r="18" fill="none" stroke="#E8F7FA" stroke-width="2.5"/>
-  <path d="M32 14v3.5M46 30h-3.5M32 46v-3.5M18 30h3.5" stroke="#E8F7FA" stroke-width="2" stroke-linecap="round"/>
-  <path d="M32 22c5.5 6.2 8.5 9.8 8.5 13.8a8.5 8.5 0 1 1-17 0c0-4 3-7.6 8.5-13.8z" fill="#00B4C8"/>
-  <circle cx="32" cy="36.5" r="2.6" fill="#0B1F33"/>
-  <path d="M24 52.5l4 4 12-11" fill="none" stroke="#A8E63A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect width="64" height="64" rx="14" fill="#0E3D24"/>
+  
+    <circle cx="32" cy="32" r="20" fill="#E8F5EE" stroke="#147A45" stroke-width="2.75"/>
+    <path d="M32 14v4M48 32h-4M32 50v-4M16 32h4M43.3 20.7l-2.8 2.8M43.3 43.3l-2.8-2.8M20.7 43.3l2.8-2.8M20.7 20.7l2.8 2.8" stroke="#147A45" stroke-width="2" stroke-linecap="round"/>
+    <path d="M32 32 L44 18" stroke="#F07A1A" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="32" cy="32" r="4" fill="#F07A1A"/>
+    <circle cx="32" cy="32" r="1.8" fill="#FFFFFF"/>
+    <rect x="18" y="54" width="28" height="3.5" rx="1.75" fill="#147A45"/>
 </g>
-  <text x="78" y="42" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="32" font-weight="500" letter-spacing="-1" fill="#0B1F33">metertron</text>
+  <text x="78" y="42" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="32" font-weight="500" letter-spacing="-1" fill="#0E3D24">metertron</text>
 </svg>
