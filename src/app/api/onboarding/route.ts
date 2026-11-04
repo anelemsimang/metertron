@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { requireSession } from "@/server/auth/require-admin";
 import { getDb, safeDbMessage, withOrg } from "@/server/db/client";
 import { organisations } from "@/server/db/schema";
+import { ensureTrialSubscription } from "@/server/billing/subscriptions";
 import { ensureDefaultContract } from "@/server/templates/contracts";
 import { ensureBuiltinExportTemplates } from "@/server/templates/export";
 
@@ -75,6 +76,7 @@ export async function POST(request: Request) {
           onboardingCompletedAt: organisations.onboardingCompletedAt,
         });
       if (complete) {
+        await ensureTrialSubscription(gate.user.organisationId);
         await ensureBuiltinExportTemplates(gate.user.organisationId);
         await ensureDefaultContract(gate.user.organisationId);
       }

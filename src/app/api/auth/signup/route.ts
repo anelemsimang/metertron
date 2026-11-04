@@ -4,6 +4,7 @@ import { createSession } from "@/server/auth/session";
 import { issueAuthToken } from "@/server/auth/tokens";
 import { getDb, safeDbMessage, withBypassRls } from "@/server/db/client";
 import { organisationMemberships, users } from "@/server/db/schema";
+import { ensureTrialSubscription } from "@/server/billing/subscriptions";
 import { createOrganisation } from "@/server/orgs/create";
 
 function clean(value: unknown) {
@@ -68,6 +69,7 @@ export async function POST(request: Request) {
       return user;
     });
 
+    await ensureTrialSubscription(organisation.id);
     const verify = await issueAuthToken({ kind: "email_verify", email, userId: created.id, ttlHours: 48 });
     await createSession(created.id, organisation.id);
 

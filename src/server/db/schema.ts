@@ -446,3 +446,97 @@ export const exportTemplates = pgTable("export_templates", {
   uniqueIndex("export_templates_org_key").on(table.organisationId, table.key),
   index("export_templates_org").on(table.organisationId),
 ]);
+
+export const billingInterval = pgEnum("billing_interval", ["monthly", "annual"]);
+export const subscriptionStatus = pgEnum("subscription_status", [
+  "trialing",
+  "active",
+  "past_due",
+  "grace",
+  "cancelled",
+  "expired",
+]);
+export const invoiceStatus = pgEnum("invoice_status", ["draft", "open", "paid", "void", "uncollectible"]);
+
+/** Catalog of Metertron plans. Amounts are excl. VAT, in ZAR cents. */
+export const plans = pgTable("plans", {
+  key: text("key").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull().default(""),
+  amountMonthlyZarCents: integer("amount_monthly_zar_cents"),
+  seatLimit: integer("seat_limit"),
+  installsPerMonth: integer("installs_per_month"),
+  storageBytes: bigint("storage_bytes", { mode: "number" }),
+  paystackPlanCodeMonthly: text("paystack_plan_code_monthly"),
+  paystackPlanCodeAnnual: text("paystack_plan_code_annual"),
+  isPublic: boolean("is_public").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  ...timestamps,
+});
+
+export const organisationSubscriptions = pgTable("organisation_subscriptions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
+  planKey: text("plan_key").notNull().references(() => plans.key),
+  interval: billingInterval("interval").notNull().default("monthly"),
+  status: subscriptionStatus("status").notNull().default("trialing"),
+  paystackCustomerCode: text("paystack_customer_code"),
+  paystackSubscriptionCode: text("paystack_subscription_code"),
+  currentPeriodStart: timestamp("current_period_start", { withTimezone: true }),
+  currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
+  graceEndsAt: timestamp("grace_ends_at", { withTimezone: true }),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("organisation_subscriptions_org").on(table.organisationId),
+  index("organisation_subscriptions_plan").on(table.planKey),
+]);
+
+export const usagePeriods = pgTable("usage_periods", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
+  periodStart: timestamp("period_start", { withTimezone: true }).notNull(),
+  periodEnd: timestamp("period_end", { withTimezone: true }).notNull(),
+  seatsUsed: integer("seats_used").notNull().default(0),
+  installsCount: integer("installs_count").notNull().default(0),
+  storageBytes: bigint("storage_bytes", { mode: "number" }).notNull().default(0),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("usage_periods_org_start").on(table.organisationId, table.periodStart),
+  index("usage_periods_org").on(table.organisationId),
+]);
+
+export const invoices = pgTable("invoices", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
+  number: text("number").notNull(),
+  status: invoiceStatus("status").notNull().default("draft"),
+  currency: text("currency").notNull().default("ZAR"),
+  subtotalZarCents: integer("subtotal_zar_cents").notNull(),
+  vatRateBps: integer("vat_rate_bps").notNull().default(1500),
+  vatZarCents: integer("vat_zar_cents").notNull(),
+  totalZarCents: integer("total_zar_cents").notNull(),
+  vatNumber: text("vat_number"),
+  paystackReference: text("paystack_reference"),
+  lineItems: jsonb("line_items").$type<Array<{ description: string; amountZarCents: number; quantity: number }>>().notNull().default([]),
+  periodStart: timestamp("period_start", { withTimezone: true }),
+  periodEnd: timestamp("period_end", { withTimezone: true }),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("invoices_org_number").on(table.organisationId, table.number),
+  index("invoices_org").on(table.organisationId),
+]);
+
+export const billingEvents = pgTable("billing_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").references(() => organisations.id),
+  kind: text("kind").notNull(),
+  provider: text("provider").notNull().default("paystack"),
+  externalId: text("external_id"),
+  payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
+  ...timestamps,
+}, (table) => [
+  index("billing_events_org").on(table.organisationId),
+  index("billing_events_kind").on(table.kind),
+]);

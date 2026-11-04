@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ClipboardList,
+  CreditCard,
   FileSpreadsheet,
   LayoutDashboard,
   ListChecks,
@@ -33,6 +34,7 @@ const nav = [
   { href: "/office/exports", label: "Exports", icon: FileSpreadsheet, key: "G E" },
   { href: "/office/templates", label: "Templates", icon: ClipboardList, key: "G X" },
   { href: "/office/forms", label: "Forms", icon: Settings2, key: "G F" },
+  { href: "/office/billing", label: "Billing", icon: CreditCard, key: "G B" },
   { href: "/office/map", label: "Map", icon: Map, key: "G M" },
 ];
 
@@ -47,6 +49,7 @@ const go = {
   e: "/office/exports",
   x: "/office/templates",
   f: "/office/forms",
+  b: "/office/billing",
   m: "/office/map",
 } as const;
 

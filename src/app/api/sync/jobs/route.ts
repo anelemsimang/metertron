@@ -1,5 +1,7 @@
 import { normaliseAnswers } from "@/domain/forms/normalise";
 import { blockingIssues, validateForm } from "@/domain/forms/validate";
+import { OrgAccessError, assertOrgWritable } from "@/server/billing/org-access";
+import { assertWithinInstallLimit } from "@/server/billing/usage";
 import { getSessionUser } from "@/server/auth/session";
 import { safeDbMessage, withOrg } from "@/server/db/client";
 import { acceptSyncedJob } from "@/server/sync/persist";
@@ -17,6 +19,8 @@ export async function POST(request: Request) {
   }
   try {
     return await withOrg(user.organisationId, async () => {
+      await assertOrgWritable(user.organisationId);
+      await assertWithinInstallLimit(user.organisationId);
       const form = await resolveFieldForm(user.organisationId);
       const answers = normaliseAnswers(form, body.answers!);
       const issues = blockingIssues(validateForm(form, answers, "submit"));
@@ -27,6 +31,12 @@ export async function POST(request: Request) {
       return Response.json(saved);
     });
   } catch (error) {
+    if (error instanceof OrgAccessError) {
+      return Response.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Error && /limit reached/i.test(error.message)) {
+      return Response.json({ error: error.message }, { status: 402 });
+    }
     const cause = error instanceof Error && "cause" in error ? error.cause : error;
     const detail = cause instanceof Error ? cause.message : safeDbMessage(error);
     console.error("Job sync failed:", detail.replace(/postgres(?:ql)?:\/\/\S+/gi, "postgresql://…"));

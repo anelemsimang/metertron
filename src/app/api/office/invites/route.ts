@@ -1,6 +1,8 @@
 import { isMembershipRole } from "@/lib/membership";
 import { requireCapability } from "@/server/auth/require-admin";
-import { safeDbMessage } from "@/server/db/client";
+import { OrgAccessError, assertOrgWritable } from "@/server/billing/org-access";
+import { assertWithinSeatLimit } from "@/server/billing/usage";
+import { safeDbMessage, withOrg } from "@/server/db/client";
 import { createInvite, listInvites, revokeInvite } from "@/server/orgs/invites";
 
 export async function GET() {
@@ -31,35 +33,46 @@ export async function POST(request: Request) {
   const body = (await request.json()) as { email?: unknown; role?: unknown; action?: unknown; inviteId?: unknown };
 
   try {
-    if (body.action === "revoke") {
-      const inviteId = typeof body.inviteId === "string" ? body.inviteId : "";
-      if (!inviteId) return Response.json({ error: "Choose an invite." }, { status: 400 });
-      await revokeInvite(gate.user.organisationId, inviteId);
-      return Response.json({ ok: true });
-    }
+    return await withOrg(gate.user.organisationId, async () => {
+      if (body.action === "revoke") {
+        const inviteId = typeof body.inviteId === "string" ? body.inviteId : "";
+        if (!inviteId) return Response.json({ error: "Choose an invite." }, { status: 400 });
+        await revokeInvite(gate.user.organisationId, inviteId);
+        return Response.json({ ok: true });
+      }
 
-    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-    const role = body.role;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return Response.json({ error: "Enter a valid email." }, { status: 400 });
-    if (!isMembershipRole(role) || role === "owner") {
-      return Response.json({ error: "Choose a role (admin, supervisor, technician, or viewer)." }, { status: 400 });
-    }
-    const invite = await createInvite({
-      organisationId: gate.user.organisationId,
-      email,
-      role,
-      invitedBy: gate.user.id,
-    });
-    return Response.json({
-      invite: {
-        id: invite.id,
-        email: invite.email,
-        role: invite.role,
-        expiresAt: invite.expiresAt,
-        acceptPath: `/invite/${invite.token}`,
-      },
+      await assertOrgWritable(gate.user.organisationId);
+      await assertWithinSeatLimit(gate.user.organisationId);
+
+      const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+      const role = body.role;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return Response.json({ error: "Enter a valid email." }, { status: 400 });
+      if (!isMembershipRole(role) || role === "owner") {
+        return Response.json({ error: "Choose a role (admin, supervisor, technician, or viewer)." }, { status: 400 });
+      }
+      const invite = await createInvite({
+        organisationId: gate.user.organisationId,
+        email,
+        role,
+        invitedBy: gate.user.id,
+      });
+      return Response.json({
+        invite: {
+          id: invite.id,
+          email: invite.email,
+          role: invite.role,
+          expiresAt: invite.expiresAt,
+          acceptPath: `/invite/${invite.token}`,
+        },
+      });
     });
   } catch (error) {
+    if (error instanceof OrgAccessError) {
+      return Response.json({ error: error.message }, { status: error.status });
+    }
+    if (error instanceof Error && /limit reached/i.test(error.message)) {
+      return Response.json({ error: error.message }, { status: 402 });
+    }
     return Response.json({ error: safeDbMessage(error) }, { status: 500 });
   }
 }
