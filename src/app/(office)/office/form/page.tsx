@@ -15,6 +15,8 @@ const capabilityLabel: Record<Capability, string> = {
   approve_or_reject: "Approve or reject",
   unlock_approved: "Unlock approved",
   manage_setup: "Team and setup",
+  manage_billing: "Manage billing",
+  invite_members: "Invite members",
   export: "Export",
 };
 

@@ -28,6 +28,12 @@ async function main() {
       await sql.unsafe(statement);
       console.log("ok");
     } catch (error) {
+      const code = typeof error === "object" && error && "code" in error ? String((error as { code: unknown }).code) : "";
+      // Idempotent re-apply on partially pushed schemas
+      if (code === "42710" || code === "42P07" || code === "42701") {
+        console.log(`skip (${code})`);
+        continue;
+      }
       console.log("FAILED");
       console.error(statement.slice(0, 200));
       throw error;

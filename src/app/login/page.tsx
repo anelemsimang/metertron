@@ -11,6 +11,7 @@ function LoginForm() {
   const params = useSearchParams();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [name, setName] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,20 +31,40 @@ function LoginForm() {
     const response = await fetch(mode === "login" ? "/api/auth/login" : "/api/auth/signup", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(mode === "login" ? { email, password } : { name, username, email, password }),
+      body: JSON.stringify(
+        mode === "login"
+          ? { email, password }
+          : { name, username, email, password, companyName },
+      ),
     });
-    const body = (await response.json()) as { error?: string; user?: { name: string; username: string; orgRole?: "head" | "admin" | "member" } };
+    const body = (await response.json()) as {
+      error?: string;
+      onboardingRequired?: boolean;
+      user?: { name: string; username: string; orgRole?: "head" | "admin" | "member"; membershipRole?: string };
+    };
     setPending(false);
     if (!response.ok || !body.user) {
       setError(body.error ?? "Could not sign you in.");
       return;
     }
     localStorage.setItem(STORAGE.tech, JSON.stringify({ name: body.user.name, username: body.user.username }));
-    const manager = body.user.orgRole === "admin" || body.user.orgRole === "head";
+    if (body.onboardingRequired) {
+      window.location.assign("/onboarding");
+      return;
+    }
+    const membership = body.user.membershipRole;
+    const manager =
+      membership === "owner" ||
+      membership === "admin" ||
+      membership === "supervisor" ||
+      membership === "viewer" ||
+      body.user.orgRole === "admin" ||
+      body.user.orgRole === "head";
     const asked = params.get("next");
     let destination = manager ? "/office" : "/field";
     if (asked?.startsWith("/field")) destination = asked;
     if (manager && asked?.startsWith("/office")) destination = asked;
+    if (asked?.startsWith("/onboarding")) destination = asked;
     window.location.assign(destination);
   }
 
@@ -66,6 +87,7 @@ function LoginForm() {
           {mode === "signup" ? (
             <>
               <Field label="Your name" value={name} onChange={setName} autoComplete="name" />
+              <Field label="Company name" value={companyName} onChange={setCompanyName} autoComplete="organization" />
               <Field label="Username" value={username} onChange={setUsername} autoComplete="username" />
             </>
           ) : null}

@@ -1,7 +1,7 @@
 import { DatabaseNotice } from "@/components/office/database-notice";
+import { InvitePanel } from "@/components/office/invite-panel";
 import { TeamList } from "@/components/office/team-list";
 import { SectionTitle } from "@/components/section-title";
-import { isOfficeRole } from "@/lib/roles";
 import { getSessionUser } from "@/server/auth/session";
 import { loadTeam } from "@/server/office/load";
 
@@ -11,15 +11,21 @@ export default async function Page() {
   try {
     const user = await getSessionUser();
     const people = await loadTeam();
+    const canInvite = user?.membershipRole === "owner" || user?.membershipRole === "admin";
     return (
       <div className="space-y-4">
         <div>
           <SectionTitle>Team</SectionTitle>
           <p className="mt-3 text-sm text-muted">
-            Head managers and managers use this dashboard. Only a head manager can change roles or remove someone, and their past jobs stay on record. A new account starts in the field.
+            Owners and admins invite people and manage roles. Past jobs stay on record when someone is removed.
           </p>
         </div>
-        <TeamList people={people} currentUserId={user?.id ?? ""} viewerRole={user && isOfficeRole(user.orgRole) ? user.orgRole : "admin"} />
+        {canInvite ? <InvitePanel /> : null}
+        <TeamList
+          people={people}
+          currentUserId={user?.id ?? ""}
+          viewerRole={user?.orgRole === "head" || user?.orgRole === "admin" ? user.orgRole : "admin"}
+        />
       </div>
     );
   } catch (error) {

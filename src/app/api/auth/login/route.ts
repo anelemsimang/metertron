@@ -1,8 +1,9 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { membershipFromOrgRole } from "@/lib/membership";
 import { verifyPassword } from "@/server/auth/password";
 import { createSession } from "@/server/auth/session";
 import { getDb, safeDbMessage, withBypassRls } from "@/server/db/client";
-import { users } from "@/server/db/schema";
+import { organisationMemberships, users } from "@/server/db/schema";
 
 export async function POST(request: Request) {
   const body = (await request.json()) as { email?: unknown; password?: unknown };
@@ -19,8 +20,25 @@ export async function POST(request: Request) {
       return Response.json({ error: "Email or password is wrong." }, { status: 401 });
     }
     if (user.removedAt) return Response.json({ error: "This account has been removed." }, { status: 403 });
+    const membershipRole = await withBypassRls(async () => {
+      const [membership] = await getDb()
+        .select({ role: organisationMemberships.role })
+        .from(organisationMemberships)
+        .where(and(eq(organisationMemberships.userId, user.id), eq(organisationMemberships.organisationId, user.organisationId)))
+        .limit(1);
+      return membership?.role ?? membershipFromOrgRole(user.orgRole);
+    });
     await createSession(user.id, user.organisationId);
-    return Response.json({ user: { id: user.id, name: user.name, username: user.username, email: user.email, orgRole: user.orgRole } });
+    return Response.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        orgRole: user.orgRole,
+        membershipRole,
+      },
+    });
   } catch (error) {
     return Response.json({ error: safeDbMessage(error) }, { status: 500 });
   }

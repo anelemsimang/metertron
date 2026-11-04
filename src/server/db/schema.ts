@@ -44,6 +44,8 @@ const bytea = customType<{ data: Buffer; default: false }>({
   },
 });
 
+export const authTokenKind = pgEnum("auth_token_kind", ["email_verify", "magic_link", "password_reset"]);
+
 export const organisations = pgTable("organisations", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
@@ -61,6 +63,7 @@ export const organisations = pgTable("organisations", {
   supportAccessAllowed: boolean("support_access_allowed").notNull().default(true),
   supportAccessRequiresApproval: boolean("support_access_requires_approval").notNull().default(false),
   customDomain: text("custom_domain"),
+  onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
   ...timestamps,
 });
 
@@ -76,6 +79,9 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash"),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
+  /** Encrypted/base32 secret when TOTP is enabled (scaffold until Better Auth). */
+  totpSecret: text("totp_secret"),
+  totpEnabledAt: timestamp("totp_enabled_at", { withTimezone: true }),
   removedAt: timestamp("removed_at", { withTimezone: true }),
   ...timestamps,
 }, (table) => [
@@ -92,6 +98,36 @@ export const organisationMemberships = pgTable("organisation_memberships", {
 }, (table) => [
   uniqueIndex("organisation_memberships_user_org").on(table.userId, table.organisationId),
   index("organisation_memberships_org").on(table.organisationId),
+]);
+
+export const organisationInvites = pgTable("organisation_invites", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
+  email: text("email").notNull(),
+  role: membershipRole("role").notNull().default("technician"),
+  token: text("token").notNull().unique(),
+  invitedBy: uuid("invited_by").references(() => users.id),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  index("organisation_invites_org").on(table.organisationId),
+  index("organisation_invites_email").on(table.email),
+]);
+
+/** One-time tokens for email verify, magic link, and password reset (email delivery in Phase 8). */
+export const authTokens = pgTable("auth_tokens", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id),
+  email: text("email").notNull(),
+  kind: authTokenKind("kind").notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  consumedAt: timestamp("consumed_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  index("auth_tokens_email_kind").on(table.email, table.kind),
 ]);
 
 export const sessions = pgTable("sessions", {

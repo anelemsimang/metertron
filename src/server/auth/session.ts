@@ -1,10 +1,11 @@
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { LEGACY_SESSION_COOKIE, SESSION_COOKIE } from "@/lib/brand";
+import { membershipFromOrgRole, type MembershipRole } from "@/lib/membership";
 import { type OrgRole } from "@/lib/roles";
 import { getDb, isTransientDbError, resetDb, withBypassRls } from "@/server/db/client";
-import { sessions, users } from "@/server/db/schema";
+import { organisationMemberships, organisations, sessions, users } from "@/server/db/schema";
 
 export { SESSION_COOKIE, LEGACY_SESSION_COOKIE };
 
@@ -19,7 +20,20 @@ export type SessionUser = {
   username: string;
   email: string;
   organisationId: string;
+  organisationName: string;
+  organisationSlug: string;
+  onboardingCompleted: boolean;
   orgRole: OrgRole;
+  membershipRole: MembershipRole;
+  emailVerified: boolean;
+  totpEnabled: boolean;
+};
+
+export type OrgMembershipSummary = {
+  organisationId: string;
+  name: string;
+  slug: string;
+  role: MembershipRole;
 };
 
 function cookieOptions(maxAge = THIRTY_DAYS) {
@@ -30,6 +44,11 @@ function cookieOptions(maxAge = THIRTY_DAYS) {
     path: "/",
     maxAge,
   };
+}
+
+function clearRemembered(token?: string) {
+  if (token) remembered.delete(token);
+  else remembered.clear();
 }
 
 export async function createSession(userId: string, organisationId?: string) {
@@ -47,13 +66,14 @@ export async function createSession(userId: string, organisationId?: string) {
   const store = await cookies();
   store.set(SESSION_COOKIE, token, cookieOptions());
   store.delete(LEGACY_SESSION_COOKIE);
+  clearRemembered();
 }
 
 export async function clearSession() {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value ?? store.get(LEGACY_SESSION_COOKIE)?.value;
   if (token) {
-    remembered.delete(token);
+    clearRemembered(token);
     await withBypassRls(async () => {
       await getDb().delete(sessions).where(eq(sessions.token, token));
     });
@@ -71,10 +91,13 @@ async function readSession(token: string): Promise<SessionUser | null> {
         name: users.name,
         username: users.username,
         email: users.email,
-        organisationId: users.organisationId,
+        primaryOrganisationId: users.organisationId,
         orgRole: users.orgRole,
+        emailVerified: users.emailVerified,
+        totpEnabledAt: users.totpEnabledAt,
         removedAt: users.removedAt,
         sessionId: sessions.id,
+        sessionOrganisationId: sessions.organisationId,
         expiresAt: sessions.expiresAt,
       })
       .from(sessions)
@@ -89,21 +112,98 @@ async function readSession(token: string): Promise<SessionUser | null> {
       await db.delete(sessions).where(eq(sessions.id, row.sessionId));
       return null;
     }
+
+    const organisationId = row.sessionOrganisationId ?? row.primaryOrganisationId;
+    const [membership] = await db
+      .select({ role: organisationMemberships.role })
+      .from(organisationMemberships)
+      .where(and(eq(organisationMemberships.userId, row.id), eq(organisationMemberships.organisationId, organisationId)))
+      .limit(1);
+    const [organisation] = await db
+      .select({
+        name: organisations.name,
+        slug: organisations.slug,
+        onboardingCompletedAt: organisations.onboardingCompletedAt,
+      })
+      .from(organisations)
+      .where(eq(organisations.id, organisationId))
+      .limit(1);
+    if (!organisation) return null;
+
+    const membershipRole = membership?.role ?? membershipFromOrgRole(row.orgRole);
     return {
       id: row.id,
       name: row.name,
       username: row.username,
       email: row.email,
-      organisationId: row.organisationId,
+      organisationId,
+      organisationName: organisation.name,
+      organisationSlug: organisation.slug,
+      onboardingCompleted: Boolean(organisation.onboardingCompletedAt),
       orgRole: row.orgRole,
+      membershipRole,
+      emailVerified: row.emailVerified,
+      totpEnabled: Boolean(row.totpEnabledAt),
     };
+  });
+}
+
+export async function listUserOrganisations(userId: string): Promise<OrgMembershipSummary[]> {
+  return withBypassRls(async () => {
+    const rows = await getDb()
+      .select({
+        organisationId: organisationMemberships.organisationId,
+        role: organisationMemberships.role,
+        name: organisations.name,
+        slug: organisations.slug,
+      })
+      .from(organisationMemberships)
+      .innerJoin(organisations, eq(organisations.id, organisationMemberships.organisationId))
+      .where(eq(organisationMemberships.userId, userId));
+    return rows.map((row) => ({
+      organisationId: row.organisationId,
+      name: row.name,
+      slug: row.slug,
+      role: row.role,
+    }));
+  });
+}
+
+export async function switchOrganisation(userId: string, organisationId: string) {
+  return withBypassRls(async () => {
+    const db = getDb();
+    const [membership] = await db
+      .select({ role: organisationMemberships.role })
+      .from(organisationMemberships)
+      .where(and(eq(organisationMemberships.userId, userId), eq(organisationMemberships.organisationId, organisationId)))
+      .limit(1);
+    if (!membership) return false;
+
+    const store = await cookies();
+    const token = store.get(SESSION_COOKIE)?.value ?? store.get(LEGACY_SESSION_COOKIE)?.value;
+    if (token) {
+      await db
+        .update(sessions)
+        .set({ organisationId, updatedAt: new Date() })
+        .where(eq(sessions.token, token));
+      clearRemembered(token);
+    }
+    await db
+      .update(users)
+      .set({
+        organisationId,
+        orgRole: membership.role === "owner" ? "head" : membership.role === "admin" || membership.role === "supervisor" ? "admin" : "member",
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+    return true;
   });
 }
 
 export async function forgetUser(userId: string) {
   await withBypassRls(async () => {
     const rows = await getDb().select({ token: sessions.token }).from(sessions).where(eq(sessions.userId, userId));
-    for (const row of rows) remembered.delete(row.token);
+    for (const row of rows) clearRemembered(row.token);
   });
 }
 

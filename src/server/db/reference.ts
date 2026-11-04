@@ -1,56 +1,7 @@
 import { and, count, eq } from "drizzle-orm";
 import { membershipFromOrgRole } from "@/lib/membership";
 import { getDb, withBypassRls } from "./client";
-import { meterClasses, meterSizes, meterTypes, organisationMemberships, organisations, users } from "./schema";
-
-let ready: Promise<{ id: string }> | null = null;
-
-export function ensureOrganisation() {
-  ready ??= upsert().catch((error: unknown) => {
-    ready = null;
-    throw error;
-  });
-  return ready;
-}
-
-async function upsert() {
-  return withBypassRls(async () => {
-    const db = getDb();
-    const [existing] = await db.select().from(organisations).limit(1);
-    if (existing) {
-      const renameBrand =
-        existing.name === "MeterVault" ||
-        existing.legalName === "MeterVault" ||
-        existing.slug === "metervault";
-      if (!renameBrand) return { id: existing.id };
-      const [organisation] = await db
-        .update(organisations)
-        .set({
-          name: existing.name === "MeterVault" ? "Organisation" : existing.name,
-          legalName: existing.legalName === "MeterVault" ? "Organisation" : existing.legalName,
-          slug: existing.slug === "metervault" ? "tenant-1" : existing.slug,
-          updatedAt: new Date(),
-        })
-        .where(eq(organisations.id, existing.id))
-        .returning({ id: organisations.id });
-      return organisation;
-    }
-    const trialEnds = new Date();
-    trialEnds.setDate(trialEnds.getDate() + 14);
-    const [organisation] = await db
-      .insert(organisations)
-      .values({
-        name: "Organisation",
-        legalName: "Organisation",
-        slug: "tenant-1",
-        status: "trialing",
-        planKey: "trial",
-        trialEndsAt: trialEnds,
-      })
-      .returning({ id: organisations.id });
-    return organisation;
-  });
-}
+import { meterClasses, meterSizes, meterTypes, organisationMemberships, users } from "./schema";
 
 export async function ensureMembership(userId: string, organisationId: string, orgRole: string) {
   await withBypassRls(async () => {

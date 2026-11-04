@@ -23,6 +23,9 @@ async function otherOfficeCount(organisationId: string, userId: string) {
 export async function POST(request: Request) {
   const gate = await requireAdmin();
   if ("error" in gate) return gate.error;
+  if (gate.user.membershipRole !== "owner" && gate.user.membershipRole !== "admin") {
+    return Response.json({ error: "Only an owner or admin can manage the team." }, { status: 403 });
+  }
   const body = (await request.json()) as { userId?: unknown; orgRole?: unknown; action?: unknown };
   const userId = typeof body.userId === "string" ? body.userId : "";
   if (!userId) return Response.json({ error: "Choose a person." }, { status: 400 });

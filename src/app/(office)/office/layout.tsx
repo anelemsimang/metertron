@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { OfficeShell } from "@/components/office/office-shell";
 import { BRAND } from "@/lib/brand";
-import { isOfficeRole } from "@/lib/roles";
+import { isOfficeMembership } from "@/lib/roles";
 import { safeDbMessage } from "@/server/db/client";
 import { getSessionUser } from "@/server/auth/session";
 
@@ -27,6 +27,13 @@ export default async function OfficeLayout({ children }: { children: ReactNode }
     );
   }
   if (!user) redirect("/login?next=/office");
-  if (!isOfficeRole(user.orgRole)) redirect("/field");
-  return <OfficeShell user={{ name: user.name, email: user.email }}>{children}</OfficeShell>;
+  if (!isOfficeMembership(user.membershipRole)) redirect("/field");
+  if (!user.onboardingCompleted && (user.membershipRole === "owner" || user.membershipRole === "admin")) {
+    redirect("/onboarding");
+  }
+  return (
+    <OfficeShell user={{ name: user.name, email: user.email, organisationName: user.organisationName }}>
+      {children}
+    </OfficeShell>
+  );
 }

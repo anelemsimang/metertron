@@ -1,11 +1,2 @@
-import { ensureOrganisation } from "./reference";
-
-ensureOrganisation()
-  .then(() => {
-    console.log("Metertron organisation is ready.");
-    process.exit(0);
-  })
-  .catch((error: unknown) => {
-    console.error(error instanceof Error ? error.message : error);
-    process.exit(1);
-  });
+console.log("Organisations are created on signup (14-day trial). No seed tenant is created.");
+process.exit(0);

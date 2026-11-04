@@ -17,6 +17,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogoLockup, LogoMark } from "@/components/brand/logo";
+import { OrgSwitcher } from "@/components/org/org-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BRAND, STORAGE } from "@/lib/brand";
 
@@ -43,7 +44,13 @@ const go = {
   m: "/office/map",
 } as const;
 
-export function OfficeShell({ children, user }: { children: ReactNode; user: { name: string; email: string } }) {
+export function OfficeShell({
+  children,
+  user,
+}: {
+  children: ReactNode;
+  user: { name: string; email: string; organisationName: string };
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
@@ -142,8 +149,8 @@ export function OfficeShell({ children, user }: { children: ReactNode; user: { n
                 <PanelLeft size={18} />
               </button>
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wide text-white/80">Manager dashboard</p>
-                <p className="truncate text-base font-bold">{user.name}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-white/80">{user.name}</p>
+                <OrgSwitcher activeName={user.organisationName} className="text-base font-bold text-on-primary" />
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1">

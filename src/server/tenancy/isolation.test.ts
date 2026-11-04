@@ -79,7 +79,13 @@ if (!skipWithoutDb()) {
       username: userB.username,
       email: userB.email,
       organisationId: orgB.id,
+      organisationName: "Org B",
+      organisationSlug: "org-b",
+      onboardingCompleted: true,
       orgRole: "member",
+      membershipRole: "technician",
+      emailVerified: true,
+      totpEnabled: false,
     };
     const result = await acceptSyncedPhoto(
       {

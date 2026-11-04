@@ -6,7 +6,14 @@ const contract = "ws7761";
 const org = "Metertron";
 
 function actor(overrides: Partial<Actor> = {}): Actor {
-  return { userId: "tech-1", organisationId: org, orgRole: "member", grants: [{ contractId: contract, role: "technician" }], ...overrides };
+  return {
+    userId: "tech-1",
+    organisationId: org,
+    orgRole: "member",
+    membershipRole: "technician",
+    grants: [{ contractId: contract, role: "technician" }],
+    ...overrides,
+  };
 }
 
 function job(overrides: Partial<JobRef> = {}): JobRef {
@@ -24,7 +31,7 @@ test("a technician sees and edits only their own open jobs", () => {
 });
 
 test("a supervisor reviews the contract and cannot unlock", () => {
-  const supervisor = actor({ userId: "sup-1", grants: [{ contractId: contract, role: "supervisor" }] });
+  const supervisor = actor({ userId: "sup-1", membershipRole: "supervisor", grants: [{ contractId: contract, role: "supervisor" }] });
   assert.equal(canReadJob(supervisor, job({ enumeratorId: "tech-2", status: "submitted" })), true);
   assert.equal(canMutateJob(supervisor, "approve_or_reject", job({ status: "in_review" })), true);
   assert.equal(canMutateJob(supervisor, "unlock_approved", job({ status: "approved" })), false);
@@ -33,10 +40,10 @@ test("a supervisor reviews the contract and cannot unlock", () => {
 });
 
 test("an admin unlocks, a client viewer sees approved jobs only", () => {
-  const admin = actor({ userId: "admin-1", grants: [{ contractId: contract, role: "admin" }] });
+  const admin = actor({ userId: "admin-1", membershipRole: "admin", orgRole: "admin", grants: [{ contractId: contract, role: "admin" }] });
   assert.equal(canMutateJob(admin, "unlock_approved", job({ status: "approved" })), true);
   assert.equal(canMutateJob(admin, "manage_setup", job()), true);
-  const viewer = actor({ userId: "muni-1", grants: [{ contractId: contract, role: "client_viewer" }] });
+  const viewer = actor({ userId: "muni-1", membershipRole: "viewer", grants: [{ contractId: contract, role: "client_viewer" }] });
   assert.equal(canReadJob(viewer, job({ status: "draft" })), false);
   assert.equal(canReadJob(viewer, job({ status: "approved", enumeratorId: "tech-2" })), true);
   assert.deepEqual(exportStatuses(viewer, contract), ["approved"]);
@@ -44,13 +51,13 @@ test("an admin unlocks, a client viewer sees approved jobs only", () => {
 });
 
 test("a head manager has the same company-wide access as an organisation admin", () => {
-  const head = actor({ userId: "head-1", orgRole: "head", grants: [] });
+  const head = actor({ userId: "head-1", orgRole: "head", membershipRole: "owner", grants: [] });
   assert.equal(canMutateJob(head, "unlock_approved", job({ contractId: "other", status: "approved" })), true);
   assert.equal(canReadJob(head, job({ enumeratorId: "tech-2", status: "submitted" })), true);
 });
 
 test("an organisation admin is not limited to one contract, and another organisation is refused", () => {
-  const orgAdmin = actor({ orgRole: "admin", grants: [] });
+  const orgAdmin = actor({ orgRole: "admin", membershipRole: "admin", grants: [] });
   assert.equal(canMutateJob(orgAdmin, "unlock_approved", job({ contractId: "other", status: "approved" })), true);
   const outsider = actor({ organisationId: "other-org" });
   assert.equal(canReadJob(outsider, job()), false);
