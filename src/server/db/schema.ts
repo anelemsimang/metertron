@@ -22,6 +22,9 @@ const timestamps = {
 };
 
 export const orgRole = pgEnum("org_role", ["admin", "member", "head"]);
+/** Spec roles on organisation_memberships. head maps to owner. */
+export const membershipRole = pgEnum("membership_role", ["owner", "admin", "supervisor", "technician", "viewer"]);
+export const orgStatus = pgEnum("org_status", ["trialing", "active", "past_due", "readonly", "suspended", "deleted"]);
 export const contractRole = pgEnum("contract_role", ["technician", "supervisor", "admin", "client_viewer"]);
 export const jobStatus = pgEnum("job_status", ["draft", "submitted", "in_review", "approved", "rejected", "resubmitted"]);
 export const installationType = pgEnum("installation_type", ["meter_only", "white_and_blue_box", "non_straight"]);
@@ -46,12 +49,25 @@ export const organisations = pgTable("organisations", {
   name: text("name").notNull(),
   legalName: text("legal_name").notNull(),
   slug: text("slug").notNull().unique(),
+  status: orgStatus("status").notNull().default("trialing"),
+  planKey: text("plan_key").notNull().default("trial"),
+  trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
+  locale: text("locale").notNull().default("en-ZA"),
+  timezone: text("timezone").notNull().default("Africa/Johannesburg"),
+  currency: text("currency").notNull().default("ZAR"),
+  vatRateBps: integer("vat_rate_bps").notNull().default(1500),
+  vatNumber: text("vat_number"),
+  logoUrl: text("logo_url"),
+  supportAccessAllowed: boolean("support_access_allowed").notNull().default(true),
+  supportAccessRequiresApproval: boolean("support_access_requires_approval").notNull().default(false),
+  customDomain: text("custom_domain"),
   ...timestamps,
 });
 
 /** Compatible with a later Better Auth user table: id, name, email, emailVerified, image, createdAt, updatedAt. */
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
+  /** Primary / active organisation. Multi-org users also have organisation_memberships rows. */
   organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
   orgRole: orgRole("org_role").notNull().default("member"),
   name: text("name").notNull(),
@@ -67,9 +83,21 @@ export const users = pgTable("users", {
   uniqueIndex("users_email").on(table.email),
 ]);
 
+export const organisationMemberships = pgTable("organisation_memberships", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  role: membershipRole("role").notNull(),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("organisation_memberships_user_org").on(table.userId, table.organisationId),
+  index("organisation_memberships_org").on(table.organisationId),
+]);
+
 export const sessions = pgTable("sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id),
+  organisationId: uuid("organisation_id").references(() => organisations.id),
   token: text("token").notNull().unique(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   ipAddress: text("ip_address"),
@@ -99,59 +127,76 @@ export const contracts = pgTable("contracts", {
 
 export const contractGrants = pgTable("contract_grants", {
   id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
   userId: uuid("user_id").notNull().references(() => users.id),
   contractId: uuid("contract_id").notNull().references(() => contracts.id),
   role: contractRole("role").notNull(),
   ...timestamps,
 }, (table) => [
   uniqueIndex("contract_grants_user_contract").on(table.userId, table.contractId),
+  index("contract_grants_org").on(table.organisationId),
 ]);
 
 export const towns = pgTable("towns", {
   id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
   contractId: uuid("contract_id").notNull().references(() => contracts.id),
   name: text("name").notNull(),
   normalisedName: text("normalised_name").notNull(),
   ...timestamps,
 }, (table) => [
   uniqueIndex("towns_contract_name").on(table.contractId, table.normalisedName),
+  index("towns_org").on(table.organisationId),
 ]);
 
 export const installers = pgTable("installers", {
   id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
   contractId: uuid("contract_id").notNull().references(() => contracts.id),
   userId: uuid("user_id").references(() => users.id),
   displayName: text("display_name").notNull(),
   active: boolean("active").notNull().default(true),
   ...timestamps,
-});
+}, (table) => [
+  index("installers_org").on(table.organisationId),
+]);
 
 export const meterSizes = pgTable("meter_sizes", {
   id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
   contractId: uuid("contract_id").notNull().references(() => contracts.id),
   code: text("code").notNull(),
   exportString: text("export_string").notNull(),
   isDefault: boolean("is_default").notNull().default(false),
-});
+}, (table) => [
+  index("meter_sizes_org").on(table.organisationId),
+]);
 
 export const meterClasses = pgTable("meter_classes", {
   id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
   contractId: uuid("contract_id").notNull().references(() => contracts.id),
   code: text("code").notNull(),
   exportString: text("export_string").notNull(),
   isDefault: boolean("is_default").notNull().default(false),
-});
+}, (table) => [
+  index("meter_classes_org").on(table.organisationId),
+]);
 
 export const meterTypes = pgTable("meter_types", {
   id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
   contractId: uuid("contract_id").notNull().references(() => contracts.id),
   code: text("code").notNull(),
   exportString: text("export_string").notNull(),
   isDefault: boolean("is_default").notNull().default(false),
-});
+}, (table) => [
+  index("meter_types_org").on(table.organisationId),
+]);
 
 export const formVersions = pgTable("form_versions", {
   id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
   contractId: uuid("contract_id").notNull().references(() => contracts.id),
   key: text("key").notNull(),
   version: integer("version").notNull(),
@@ -161,6 +206,7 @@ export const formVersions = pgTable("form_versions", {
   ...timestamps,
 }, (table) => [
   uniqueIndex("form_versions_contract_key_version").on(table.contractId, table.key, table.version),
+  index("form_versions_org").on(table.organisationId),
 ]);
 
 export const workOrders = pgTable("work_orders", {
@@ -246,14 +292,17 @@ export const jobs = pgTable("jobs", {
 ]);
 
 export const jobFaults = pgTable("job_faults", {
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
   jobId: uuid("job_id").notNull().references(() => jobs.id),
   code: faultCode("code").notNull(),
 }, (table) => [
   uniqueIndex("job_faults_pk").on(table.jobId, table.code),
+  index("job_faults_org").on(table.organisationId),
 ]);
 
 export const jobPhotos = pgTable("job_photos", {
   id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
   jobId: uuid("job_id").notNull().references(() => jobs.id),
   type: photoType("type").notNull(),
   sequence: integer("sequence").notNull().default(0),
@@ -261,6 +310,7 @@ export const jobPhotos = pgTable("job_photos", {
   legacyUrl: text("legacy_url"),
   content: bytea("content"),
   idempotencyKey: text("idempotency_key"),
+  contentSha256: text("content_sha256"),
   capturedAt: timestamp("captured_at", { withTimezone: true }),
   latitude: doublePrecision("latitude"),
   longitude: doublePrecision("longitude"),
@@ -268,20 +318,25 @@ export const jobPhotos = pgTable("job_photos", {
   altitude: doublePrecision("altitude"),
   ...timestamps,
 }, (table) => [
-  uniqueIndex("job_photos_idempotency").on(table.idempotencyKey),
+  uniqueIndex("job_photos_idempotency").on(table.organisationId, table.idempotencyKey),
+  index("job_photos_org").on(table.organisationId),
 ]);
 
 export const qualityFlags = pgTable("quality_flags", {
   id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
   jobId: uuid("job_id").notNull().references(() => jobs.id),
   ruleId: text("rule_id").notNull(),
   severity: flagSeverity("severity").notNull(),
   message: text("message").notNull(),
   ...timestamps,
-});
+}, (table) => [
+  index("quality_flags_org").on(table.organisationId),
+]);
 
 export const auditEvents = pgTable("audit_events", {
   id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").references(() => organisations.id),
   jobId: uuid("job_id").references(() => jobs.id),
   actorId: uuid("actor_id").references(() => users.id),
   at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
@@ -290,7 +345,9 @@ export const auditEvents = pgTable("audit_events", {
   newValue: jsonb("new_value"),
   reason: text("reason"),
   ipAddress: text("ip_address"),
-});
+}, (table) => [
+  index("audit_events_org").on(table.organisationId),
+]);
 
 export const stockItems = pgTable("stock_items", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -324,10 +381,32 @@ export const stockMovements = pgTable("stock_movements", {
 
 export const exportRuns = pgTable("export_runs", {
   id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
   contractId: uuid("contract_id").notNull().references(() => contracts.id),
   requestedBy: uuid("requested_by").references(() => users.id),
   status: text("status").notNull().default("queued"),
   filters: jsonb("filters").notNull().default({}),
   fileKey: text("file_key"),
   ...timestamps,
-});
+}, (table) => [
+  index("export_runs_org").on(table.organisationId),
+]);
+
+/** Snapshot of a municipal/Excel export layout for a tenant (Phase 4 builds the editor). */
+export const exportTemplates = pgTable("export_templates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organisationId: uuid("organisation_id").notNull().references(() => organisations.id),
+  key: text("key").notNull(),
+  name: text("name").notNull(),
+  sheetName: text("sheet_name").notNull().default("Main"),
+  statusExportValue: text("status_export_value").notNull().default("Final"),
+  headers: jsonb("headers").$type<string[]>().notNull(),
+  mapHeaders: jsonb("map_headers").$type<string[]>().notNull().default([]),
+  listPhrases: jsonb("list_phrases").$type<{ oldMeterSuffix: string; connectionValue: string }>().notNull(),
+  sourceBuiltin: text("source_builtin"),
+  isDefault: boolean("is_default").notNull().default(false),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("export_templates_org_key").on(table.organisationId, table.key),
+  index("export_templates_org").on(table.organisationId),
+]);

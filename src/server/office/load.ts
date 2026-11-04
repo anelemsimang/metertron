@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { and, count, desc, eq, inArray, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 import { todayInZone } from "@/lib/report-period";
-import { getSessionUser } from "@/server/auth/session";
-import { getDb } from "@/server/db/client";
+import { getSessionUser, type SessionUser } from "@/server/auth/session";
+import { getDb, withOrg } from "@/server/db/client";
 import { installers, jobFaults, jobPhotos, jobs, meterClasses, meterSizes, meterTypes, organisations, stockItems, stockMovements, towns, users, workOrders } from "@/server/db/schema";
 
 const REVIEW_STATUSES = ["submitted", "in_review", "resubmitted"] as const;
@@ -83,45 +83,47 @@ async function countJobs(extra?: ReturnType<typeof eq> | ReturnType<typeof inArr
   return Number(row?.value ?? 0);
 }
 
-async function currentOrganisation() {
+async function asOffice<T>(fn: (scope: { user: SessionUser; organisationName: string }) => Promise<T>): Promise<T> {
   const user = await getSessionUser();
   if (!user) redirect("/login");
-  const db = getDb();
-  const [organisation] = await db.select({ name: organisations.name }).from(organisations).where(eq(organisations.id, user.organisationId)).limit(1);
-  return {
-    user,
-    organisationName: organisation?.name ?? "Metertron",
-  };
+  return withOrg(user.organisationId, async () => {
+    const db = getDb();
+    const [organisation] = await db.select({ name: organisations.name }).from(organisations).where(eq(organisations.id, user.organisationId)).limit(1);
+    return fn({
+      user,
+      organisationName: organisation?.name ?? "Metertron",
+    });
+  });
 }
 
 export async function loadOfficeHome(): Promise<OfficeHome> {
-  const scope = await currentOrganisation();
-  const db = getDb();
-  const scoped = eq(jobs.organisationId, scope.user.organisationId);
-  const [decisions] = await db
-    .select({
-      clean: sql<number>`count(*) filter (where ${jobs.status} = 'approved' and ${jobs.rejectionCount} = 0)`,
-      decided: sql<number>`count(*) filter (where ${jobs.status} in ('approved', 'rejected'))`,
-    })
-    .from(jobs)
-    .where(and(openJobs(), scoped));
-  const decided = Number(decisions?.decided ?? 0);
-  const clean = Number(decisions?.clean ?? 0);
-  return {
-    organisationName: scope.organisationName,
-    installsToday: await countJobs(and(scoped, eq(jobs.jobDate, todayInJohannesburg()), ne(jobs.status, "draft"))),
-    awaitingReview: await countJobs(and(scoped, inArray(jobs.status, [...REVIEW_STATUSES]))),
-    approved: await countJobs(and(scoped, eq(jobs.status, "approved"))),
-    teamCount: await countUsers(scope.user.organisationId),
-    openWorkOrders: await countOpenWorkOrders(scope.user.organisationId),
-    firstTimeRight: decided === 0 ? "—" : `${Math.round((clean / decided) * 100)}%`,
-    latest: await jobRows(and(openJobs(), scoped), 12),
-  };
+  return asOffice(async (scope) => {
+    const db = getDb();
+    const scoped = eq(jobs.organisationId, scope.user.organisationId);
+    const [decisions] = await db
+      .select({
+        clean: sql<number>`count(*) filter (where ${jobs.status} = 'approved' and ${jobs.rejectionCount} = 0)`,
+        decided: sql<number>`count(*) filter (where ${jobs.status} in ('approved', 'rejected'))`,
+      })
+      .from(jobs)
+      .where(and(openJobs(), scoped));
+    const decided = Number(decisions?.decided ?? 0);
+    const clean = Number(decisions?.clean ?? 0);
+    return {
+      organisationName: scope.organisationName,
+      installsToday: await countJobs(and(scoped, eq(jobs.jobDate, todayInJohannesburg()), ne(jobs.status, "draft"))),
+      awaitingReview: await countJobs(and(scoped, inArray(jobs.status, [...REVIEW_STATUSES]))),
+      approved: await countJobs(and(scoped, eq(jobs.status, "approved"))),
+      teamCount: await countUsers(scope.user.organisationId),
+      openWorkOrders: await countOpenWorkOrders(scope.user.organisationId),
+      firstTimeRight: decided === 0 ? "—" : `${Math.round((clean / decided) * 100)}%`,
+      latest: await jobRows(and(openJobs(), scoped), 12),
+    };
+  });
 }
 
 export async function loadJobs() {
-  const scope = await currentOrganisation();
-  return jobRows(and(openJobs(), eq(jobs.organisationId, scope.user.organisationId)));
+  return asOffice(async (scope) => jobRows(and(openJobs(), eq(jobs.organisationId, scope.user.organisationId))));
 }
 
 const jobIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -177,7 +179,7 @@ export type JobRecord = {
 
 export async function loadJob(id: string): Promise<JobRecord | null> {
   if (!jobIdPattern.test(id)) return null;
-  const scope = await currentOrganisation();
+  return asOffice(async (scope) => {
   const db = getDb();
   const [row] = await db
     .select({
@@ -282,10 +284,11 @@ export async function loadJob(id: string): Promise<JobRecord | null> {
     organisationName: row.organisationName,
     photos,
   };
+  });
 }
 
 export async function loadReportDates() {
-  const scope = await currentOrganisation();
+  return asOffice(async (scope) => {
   const db = getDb();
   const organisationId = scope.user.organisationId;
   const [captures, movements] = await Promise.all([
@@ -300,6 +303,7 @@ export async function loadReportDates() {
     captureDates: captures.flatMap((row) => (row.jobDate ? [row.jobDate] : [])),
     movementDates: movements.map((row) => row.day),
   };
+  });
 }
 
 export type ReviewPhoto = {
@@ -346,7 +350,7 @@ export type ReviewCapture = {
 };
 
 export async function loadReviewQueue(): Promise<ReviewCapture[]> {
-  const scope = await currentOrganisation();
+  return asOffice(async (scope) => {
   const db = getDb();
   const rows = await db
     .select({
@@ -443,10 +447,11 @@ export async function loadReviewQueue(): Promise<ReviewCapture[]> {
       .filter((photo) => photo.jobId === row.id)
       .map((photo) => ({ id: photo.id, type: photo.type, latitude: photo.latitude, longitude: photo.longitude })),
   }));
+  });
 }
 
 export async function loadTeam() {
-  const scope = await currentOrganisation();
+  return asOffice(async (scope) => {
   return getDb()
     .select({
       id: users.id,
@@ -457,10 +462,11 @@ export async function loadTeam() {
     .from(users)
     .where(and(eq(users.organisationId, scope.user.organisationId), isNull(users.removedAt)))
     .orderBy(users.name);
+  });
 }
 
 export async function loadWorkOrders(audience: "company" | "field" = "company") {
-  const scope = await currentOrganisation();
+  return asOffice(async (scope) => {
   const db = getDb();
   const company = eq(workOrders.organisationId, scope.user.organisationId);
   const visible = audience === "field" ? and(company, or(eq(workOrders.assignedTo, scope.user.id), isNull(workOrders.assignedTo))) : company;
@@ -481,10 +487,11 @@ export async function loadWorkOrders(audience: "company" | "field" = "company") 
     .leftJoin(users, eq(workOrders.assignedTo, users.id))
     .where(visible)
     .orderBy(desc(workOrders.createdAt));
+  });
 }
 
 export async function loadStock() {
-  const scope = await currentOrganisation();
+  return asOffice(async (scope) => {
   const db = getDb();
   return db
     .select({
@@ -498,6 +505,7 @@ export async function loadStock() {
     .leftJoin(users, eq(stockItems.issuedTo, users.id))
     .where(eq(stockItems.organisationId, scope.user.organisationId))
     .orderBy(desc(stockItems.createdAt));
+  });
 }
 
 async function countUsers(organisationId: string) {
@@ -514,7 +522,7 @@ async function countOpenWorkOrders(organisationId: string) {
 }
 
 export async function loadLocatedJobs() {
-  const scope = await currentOrganisation();
+  return asOffice(async (scope) => {
   const db = getDb();
   const rows = await db
     .select({
@@ -537,4 +545,5 @@ export async function loadLocatedJobs() {
     if (!current || (current.type !== "water_point" && row.type === "water_point")) ranked.set(row.id, row);
   }
   return [...ranked.values()];
+  });
 }

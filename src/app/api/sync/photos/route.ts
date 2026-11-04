@@ -21,17 +21,20 @@ export async function POST(request: Request) {
   }
   const bytes = Buffer.from(await file.arrayBuffer());
   try {
-    const saved = await acceptSyncedPhoto({
-      idempotencyKey,
-      jobKey,
-      fieldId,
-      bytes,
-      capturedAt: typeof form.get("capturedAt") === "string" ? String(form.get("capturedAt")) : null,
-      latitude: optionalNumber(form.get("latitude")),
-      longitude: optionalNumber(form.get("longitude")),
-      accuracy: optionalNumber(form.get("accuracy")),
-      altitude: optionalNumber(form.get("altitude")),
-    });
+    const saved = await acceptSyncedPhoto(
+      {
+        idempotencyKey,
+        jobKey,
+        fieldId,
+        bytes,
+        capturedAt: typeof form.get("capturedAt") === "string" ? String(form.get("capturedAt")) : null,
+        latitude: optionalNumber(form.get("latitude")),
+        longitude: optionalNumber(form.get("longitude")),
+        accuracy: optionalNumber(form.get("accuracy")),
+        altitude: optionalNumber(form.get("altitude")),
+      },
+      user,
+    );
     if ("error" in saved) {
       return Response.json({ error: saved.error === "job-missing" ? "Job is not in the database yet." : saved.error }, { status: saved.error === "job-missing" ? 409 : 400 });
     }

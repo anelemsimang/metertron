@@ -25,3 +25,19 @@ User replied **proceed** without answering plan §11. Defaults applied:
 - Org seed no longer called MeterVault; see question 1 above.  
 - Export/PDF product stamp is `Metertron`; tenant `company_name` / `deployment_name` still come from the contract row for municipal columns.  
 - Residual `metervault*` / `MeterVault` string literals exist only as **legacy migration bridges** (`LEGACY_STORAGE`, cookie dual-read, org rename). Remove in Phase 3 once field devices and sessions have rolled forward. See `docs/PHASE1_BRAND_REPORT.md`.
+
+---
+
+## Phase 2 (2026-11-04)
+
+| Topic | Decision |
+|-------|----------|
+| RLS | `FORCE ROW LEVEL SECURITY` on all tenant tables; GUC `app.current_org_id` + `app.bypass_rls` via `withOrg` / `withBypassRls` (transaction + AsyncLocalStorage). |
+| Auth lookups | Always `withBypassRls` (login, session, signup). Business data always `withOrg`. |
+| Memberships | `organisation_memberships` with `owner\|admin\|supervisor\|technician\|viewer`. Legacy `users.org_role` kept; head↔owner mapping in `src/lib/membership.ts`. |
+| Child tables | Added non-null `organisation_id` (+ indexes) to photos, faults, catalogs, towns, grants, etc., backfilled from parents. |
+| Photo leak | `acceptSyncedPhoto` requires session user and `jobs.organisationId` match. |
+| Object storage | Dual-write: bytea kept + `storage_key` / `content_sha256` under `/{org}/installations/{job}/{photo}.jpg` via FS driver (S3 later). |
+| Signup | Still joins Tenant #1 until Phase 3 onboarding creates orgs. |
+| Migration | `drizzle/0003_tenancy.sql` + `scripts/migrate-tenant1.ts` (--dry-run / --apply). |
+| Pooler / RLS | Supabase **transaction pooler (6543)** can hang on `BEGIN`. Prefer **session mode (5432)** for app RLS transactions. The `postgres` role is a superuser and bypasses RLS; production should use a `NOBYPASSRLS` role (documented for Phase 8 deploy). Isolation tests assert app-level photo scoping always; RLS assertions skip when the DB role bypasses RLS. |

@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import { hashPassword } from "@/server/auth/password";
 import { createSession } from "@/server/auth/session";
-import { getDb, safeDbMessage } from "@/server/db/client";
-import { ensureOrganisation, organisationRole } from "@/server/db/reference";
+import { getDb, safeDbMessage, withBypassRls } from "@/server/db/client";
+import { ensureMembership, ensureOrganisation, organisationRole } from "@/server/db/reference";
 import { users } from "@/server/db/schema";
 
 function clean(value: unknown) {
@@ -22,23 +22,28 @@ export async function POST(request: Request) {
 
   try {
     const organisation = await ensureOrganisation();
-    const db = getDb();
-    const [existingEmail] = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1);
-    if (existingEmail) return Response.json({ error: "An account with that email already exists." }, { status: 409 });
     const role = await organisationRole(organisation.id);
-    const [user] = await db
-      .insert(users)
-      .values({
-        organisationId: organisation.id,
-        orgRole: role,
-        name,
-        username,
-        email,
-        passwordHash: await hashPassword(password),
-      })
-      .returning({ id: users.id, name: users.name, username: users.username, email: users.email, orgRole: users.orgRole });
-    await createSession(user.id);
-    return Response.json({ user });
+    const user = await withBypassRls(async () => {
+      const db = getDb();
+      const [existingEmail] = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1);
+      if (existingEmail) return { conflict: true as const };
+      const [created] = await db
+        .insert(users)
+        .values({
+          organisationId: organisation.id,
+          orgRole: role,
+          name,
+          username,
+          email,
+          passwordHash: await hashPassword(password),
+        })
+        .returning({ id: users.id, name: users.name, username: users.username, email: users.email, orgRole: users.orgRole });
+      return { conflict: false as const, user: created };
+    });
+    if (user.conflict) return Response.json({ error: "An account with that email already exists." }, { status: 409 });
+    await ensureMembership(user.user.id, organisation.id, user.user.orgRole);
+    await createSession(user.user.id, organisation.id);
+    return Response.json({ user: user.user });
   } catch (error) {
     return Response.json({ error: safeDbMessage(error) }, { status: 500 });
   }

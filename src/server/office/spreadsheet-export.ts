@@ -4,7 +4,7 @@ import { buildExportWorkbook } from "@/domain/export/workbook";
 import type { ExportJob, FaultCode, InstallationCode, PhotoEvidence, PremiseCode } from "@/domain/export/job";
 import { LIST_PHRASES } from "@/domain/export/phrases";
 import { monthRange, spanFilePart, type ReportSpan } from "@/lib/report-period";
-import { getDb } from "@/server/db/client";
+import { getDb, withOrg } from "@/server/db/client";
 import {
   contracts,
   installers,
@@ -78,6 +78,7 @@ function emptyFaults(): Record<FaultCode, boolean> {
 }
 
 export async function buildCaptureSpreadsheet(organisationId: string, span: ReportSpan | null, origin: string) {
+  return withOrg(organisationId, async () => {
   const db = getDb();
   const modifiers = alias(users, "modifiers");
   const filters = [eq(jobs.organisationId, organisationId), isNull(jobs.deletedAt)];
@@ -264,6 +265,7 @@ export async function buildCaptureSpreadsheet(organisationId: string, span: Repo
     ),
     count: exportJobs.length,
   };
+  });
 }
 
 function spreadsheetFilename(

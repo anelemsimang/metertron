@@ -2,8 +2,9 @@ import { and, count, eq, inArray, isNull, ne } from "drizzle-orm";
 import { isOfficeRole, type OrgRole } from "@/lib/roles";
 import { requireAdmin } from "@/server/auth/require-admin";
 import { forgetUser } from "@/server/auth/session";
-import { getDb, safeDbMessage } from "@/server/db/client";
-import { sessions, users, workOrders } from "@/server/db/schema";
+import { getDb, safeDbMessage, withOrg } from "@/server/db/client";
+import { organisationMemberships, sessions, users, workOrders } from "@/server/db/schema";
+import { membershipFromOrgRole } from "@/lib/membership";
 
 const officeRoles = ["head", "admin"] as const;
 
@@ -28,38 +29,56 @@ export async function POST(request: Request) {
   if (userId === gate.user.id) return Response.json({ error: "You cannot change your own account." }, { status: 400 });
 
   try {
-    const db = getDb();
-    const [person] = await db
-      .select({ id: users.id, orgRole: users.orgRole, removedAt: users.removedAt })
-      .from(users)
-      .where(and(eq(users.id, userId), eq(users.organisationId, gate.user.organisationId)))
-      .limit(1);
-    if (!person || person.removedAt) return Response.json({ error: "That person is not in this company." }, { status: 404 });
+    return await withOrg(gate.user.organisationId, async () => {
+      const db = getDb();
+      const [person] = await db
+        .select({ id: users.id, orgRole: users.orgRole, removedAt: users.removedAt })
+        .from(users)
+        .where(and(eq(users.id, userId), eq(users.organisationId, gate.user.organisationId)))
+        .limit(1);
+      if (!person || person.removedAt) return Response.json({ error: "That person is not in this company." }, { status: 404 });
 
-    if (body.action === "remove") {
-      if (gate.user.orgRole !== "head") return Response.json({ error: "Only a head manager can remove someone." }, { status: 403 });
-      if (isOfficeRole(person.orgRole) && (await otherOfficeCount(gate.user.organisationId, userId)) === 0) {
+      if (body.action === "remove") {
+        if (gate.user.orgRole !== "head") return Response.json({ error: "Only a head manager can remove someone." }, { status: 403 });
+        if (isOfficeRole(person.orgRole) && (await otherOfficeCount(gate.user.organisationId, userId)) === 0) {
+          return Response.json({ error: "The company needs at least one manager." }, { status: 409 });
+        }
+        await forgetUser(userId);
+        await db.delete(sessions).where(eq(sessions.userId, userId));
+        await db
+          .update(workOrders)
+          .set({ assignedTo: null, status: "unassigned", updatedAt: new Date() })
+          .where(
+            and(
+              eq(workOrders.organisationId, gate.user.organisationId),
+              eq(workOrders.assignedTo, userId),
+              inArray(workOrders.status, ["assigned", "in_progress"]),
+            ),
+          );
+        await db
+          .update(users)
+          .set({ removedAt: new Date(), updatedAt: new Date() })
+          .where(and(eq(users.id, userId), eq(users.organisationId, gate.user.organisationId)));
+        return Response.json({ ok: true });
+      }
+
+      if (gate.user.orgRole !== "head") return Response.json({ error: "Only a head manager can change roles." }, { status: 403 });
+      const orgRole = asRole(body.orgRole);
+      if (!orgRole) return Response.json({ error: "Choose a role." }, { status: 400 });
+      if (isOfficeRole(person.orgRole) && orgRole === "member" && (await otherOfficeCount(gate.user.organisationId, userId)) === 0) {
         return Response.json({ error: "The company needs at least one manager." }, { status: 409 });
       }
-      await forgetUser(userId);
-      await db.delete(sessions).where(eq(sessions.userId, userId));
       await db
-        .update(workOrders)
-        .set({ assignedTo: null, status: "unassigned", updatedAt: new Date() })
-        .where(and(eq(workOrders.assignedTo, userId), inArray(workOrders.status, ["assigned", "in_progress"])));
-      await db.update(users).set({ removedAt: new Date(), updatedAt: new Date() }).where(eq(users.id, userId));
+        .update(users)
+        .set({ orgRole, updatedAt: new Date() })
+        .where(and(eq(users.id, userId), eq(users.organisationId, gate.user.organisationId)));
+      await db
+        .update(organisationMemberships)
+        .set({ role: membershipFromOrgRole(orgRole), updatedAt: new Date() })
+        .where(and(eq(organisationMemberships.userId, userId), eq(organisationMemberships.organisationId, gate.user.organisationId)));
+      await forgetUser(userId);
       return Response.json({ ok: true });
-    }
-
-    if (gate.user.orgRole !== "head") return Response.json({ error: "Only a head manager can change roles." }, { status: 403 });
-    const orgRole = asRole(body.orgRole);
-    if (!orgRole) return Response.json({ error: "Choose a role." }, { status: 400 });
-    if (isOfficeRole(person.orgRole) && orgRole === "member" && (await otherOfficeCount(gate.user.organisationId, userId)) === 0) {
-      return Response.json({ error: "The company needs at least one manager." }, { status: 409 });
-    }
-    await db.update(users).set({ orgRole, updatedAt: new Date() }).where(eq(users.id, userId));
-    await forgetUser(userId);
-    return Response.json({ ok: true });
+    });
   } catch (error) {
     return Response.json({ error: safeDbMessage(error) }, { status: 500 });
   }

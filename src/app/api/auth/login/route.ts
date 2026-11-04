@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { verifyPassword } from "@/server/auth/password";
 import { createSession } from "@/server/auth/session";
-import { getDb, safeDbMessage } from "@/server/db/client";
+import { getDb, safeDbMessage, withBypassRls } from "@/server/db/client";
 import { users } from "@/server/db/schema";
 
 export async function POST(request: Request) {
@@ -11,12 +11,15 @@ export async function POST(request: Request) {
   if (!email || !password) return Response.json({ error: "Enter your email and password." }, { status: 400 });
 
   try {
-    const [user] = await getDb().select().from(users).where(eq(users.email, email)).limit(1);
+    const user = await withBypassRls(async () => {
+      const [row] = await getDb().select().from(users).where(eq(users.email, email)).limit(1);
+      return row ?? null;
+    });
     if (!user?.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
       return Response.json({ error: "Email or password is wrong." }, { status: 401 });
     }
     if (user.removedAt) return Response.json({ error: "This account has been removed." }, { status: 403 });
-    await createSession(user.id);
+    await createSession(user.id, user.organisationId);
     return Response.json({ user: { id: user.id, name: user.name, username: user.username, email: user.email, orgRole: user.orgRole } });
   } catch (error) {
     return Response.json({ error: safeDbMessage(error) }, { status: 500 });
