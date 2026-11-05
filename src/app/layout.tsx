@@ -1,29 +1,30 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import localFont from "next/font/local";
 import { NavigationLoadingBoundary } from "@/components/brand/navigation-loading-boundary";
 import { BRAND, STORAGE } from "@/lib/brand";
 import { SITE } from "@/lib/marketing/site";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["500", "600"],
+/** Self-hosted to avoid flaky next/font/google builds when Google returns extensionless font URLs. */
+const spaceGrotesk = localFont({
+  src: "./fonts/space-grotesk-latin-wght-normal.woff2",
+  weight: "500 600",
   variable: "--font-display",
   display: "swap",
   preload: true,
 });
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "600"],
+const inter = localFont({
+  src: "./fonts/inter-latin-wght-normal.woff2",
+  weight: "400 600",
   variable: "--font-sans",
   display: "swap",
   preload: true,
 });
 
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["500"],
+const jetbrainsMono = localFont({
+  src: "./fonts/jetbrains-mono-latin-wght-normal.woff2",
+  weight: "500",
   variable: "--font-mono",
   display: "swap",
   preload: false,
