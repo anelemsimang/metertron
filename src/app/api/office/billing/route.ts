@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     return await withOrg(gate.user.organisationId, async () => {
       if (action === "verify") {
         if (!isBillingCheckoutEnabled()) {
-          return Response.json({ error: "Online checkout is not available. Contact Metertron to renew." }, { status: 403 });
+          return Response.json({ error: "WhatsApp or call Metertron for pricing." }, { status: 403 });
         }
         const reference = typeof body.reference === "string" ? body.reference : "";
         if (!reference) return Response.json({ error: "Missing payment reference." }, { status: 400 });
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
       if (!isBillingCheckoutEnabled()) {
         return Response.json(
           {
-            error: "Online checkout is paused. WhatsApp or call Metertron to arrange monthly or annual access.",
+            error: "WhatsApp or call Metertron for pricing.",
           },
           { status: 403 },
         );

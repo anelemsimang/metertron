@@ -84,7 +84,7 @@ export function CtaSecondary({ href, children = "Chat on WhatsApp", light = fals
 
 export function CtaBand({
   title = "Ready to account for every meter?",
-  body = `Start a ${PRICING.trialDays}-day free trial — or WhatsApp us to arrange monthly or annual access for your organisation.`,
+  body = `Start a ${PRICING.trialDays}-day free trial. WhatsApp or call us for pricing.`,
 }: {
   title?: string;
   body?: string;

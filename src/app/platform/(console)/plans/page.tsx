@@ -77,7 +77,7 @@ export default function PlatformPlansPage() {
       <div>
         <h1 className="text-xl font-semibold">Plan</h1>
         <p className="mt-1 text-sm text-slate-400">
-          One commercial subscription per organisation. Full product access; trial is {trialDays} days on the same plan.
+          One commercial subscription per organisation. Full product access; trial is {trialDays} days on the same product.
         </p>
       </div>
 
@@ -93,8 +93,8 @@ export default function PlatformPlansPage() {
         <ul className="mb-4 space-y-1 text-sm text-slate-400">
           <li>Key: <span className="font-mono text-slate-200">metertron</span></li>
           <li>No seat, install, or storage caps</li>
-          <li>Annual billing = 12 × monthly (no discount)</li>
-          <li>VAT applied at checkout (default 15%)</li>
+          <li>Internal catalog amounts only — not shown on the public site</li>
+          <li>VAT applied if online checkout is re-enabled (default 15%)</li>
         </ul>
         <form onSubmit={(e) => void save(e)} className="grid max-w-xl gap-3 text-sm">
           <label>

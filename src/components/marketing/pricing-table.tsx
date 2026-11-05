@@ -1,78 +1,46 @@
 "use client";
 
-import { useState } from "react";
 import {
   CtaPrimary,
   CtaSecondary,
   FaqAccordion,
 } from "@/components/marketing/ui";
-import { PRICING, formatZar } from "@/lib/marketing/pricing";
+import { PRICING } from "@/lib/marketing/pricing";
 
 const faqs = [
   {
-    q: "Is there more than one plan?",
-    a: "No. One Metertron subscription per organisation includes full product access. We do not sell seat tiers.",
+    q: "What do we get?",
+    a: "Full Metertron access for your organisation — field, office, exports, and team tools. No seat tiers.",
   },
   {
-    q: "How do I pay?",
-    a: "Paid access is arranged with us directly (WhatsApp or phone) — monthly or annual. There is no card checkout on the site for now.",
+    q: "How do I get pricing?",
+    a: "WhatsApp or call us for pricing.",
   },
   {
-    q: "How long is the trial?",
-    a: `Every new organisation gets one ${PRICING.trialDays}-day trial with full access. No card is required. The free trial can only be used once per email.`,
+    q: "Is there a free trial?",
+    a: `Yes. Every new organisation gets one ${PRICING.trialDays}-day trial with full access. No card required. The trial can only be used once per email.`,
   },
   {
-    q: "Does annual billing discount two months?",
-    a: "No. Annual is exactly 12 × the monthly rate — predictable cash planning without promotional fine print.",
-  },
-  {
-    q: "Is VAT included?",
-    a: PRICING.vatNote,
+    q: "How do I start?",
+    a: `Start the ${PRICING.trialDays}-day trial online, or WhatsApp us if you want a walkthrough first.`,
   },
 ];
 
 export function PricingTable() {
-  const [annual, setAnnual] = useState(false);
-  const price = annual ? PRICING.annualZarCents : PRICING.monthlyZarCents;
-  const period = annual ? "year" : "month";
-
   return (
     <>
-      <div className="mt-8 inline-flex rounded-lg border border-line bg-white p-1 text-sm">
-        <button
-          type="button"
-          onClick={() => setAnnual(false)}
-          className={`rounded-md px-4 py-2 font-semibold ${!annual ? "bg-[var(--mt-grove)] text-white" : "text-muted"}`}
-        >
-          Monthly
-        </button>
-        <button
-          type="button"
-          onClick={() => setAnnual(true)}
-          className={`rounded-md px-4 py-2 font-semibold ${annual ? "bg-[var(--mt-grove)] text-white" : "text-muted"}`}
-        >
-          Annual
-        </button>
-      </div>
-
       <div className="mt-10 max-w-lg rounded-xl border border-line bg-white p-8 mk-glow">
         <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--mt-leaf)]">Metertron</p>
-        <p className="mt-4 font-[family-name:var(--font-display)] text-5xl font-medium text-[var(--mt-grove)]">
-          {formatZar(price)}
-          <span className="text-lg font-normal text-muted"> / {period} excl. VAT</span>
+        <p className="mt-4 font-[family-name:var(--font-display)] text-3xl font-medium text-[var(--mt-grove)] md:text-4xl">
+          Full access for your organisation
         </p>
         <p className="mt-2 text-sm text-muted">
-          {annual
-            ? `Billed annually (${formatZar(PRICING.monthlyZarCents)} × 12)`
-            : `Or ${formatZar(PRICING.annualZarCents)} / year excl. VAT`}
+          Capture, review, stock, and municipal exports — without seat tiers.
         </p>
         <p className="mt-3 text-sm font-semibold text-[var(--mt-leaf)]">
-          {PRICING.trialDays}-day free trial · paid access arranged with us
+          {PRICING.trialDays}-day free trial
         </p>
-        <p className="mt-2 text-sm text-muted">
-          Start a trial online anytime. For monthly or annual access after the trial, WhatsApp us — we activate your
-          organisation from our control panel.
-        </p>
+        <p className="mt-2 text-sm text-muted">{PRICING.consultNote}</p>
         <ul className="mt-8 space-y-2 text-sm text-[var(--mt-slate-700)]">
           {PRICING.features.map((feature) => (
             <li key={feature} className="flex gap-2">
@@ -85,7 +53,7 @@ export function PricingTable() {
         </ul>
         <div className="mt-8 flex flex-wrap gap-3">
           <CtaPrimary />
-          <CtaSecondary>WhatsApp to arrange access</CtaSecondary>
+          <CtaSecondary>WhatsApp for pricing</CtaSecondary>
         </div>
       </div>
 

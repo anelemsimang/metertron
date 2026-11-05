@@ -22,13 +22,13 @@ export const SOLUTIONS: SolutionPage[] = [
     title: "Meter installation contractors",
     metaTitle: "Software for meter installation contractors | Metertron",
     metaDescription:
-      "End-to-end capture, review, and municipal export for water meter installation contractors in South Africa. One plan, 7-day trial.",
+      "End-to-end capture, review, and municipal export for water meter installation contractors in South Africa. Full product access with a 7-day trial.",
     primaryKeyword: "meter installation contractor software",
     secondaryKeywords: ["water meter contractor app", "install tracking", "municipal submission contractor", "field to export"],
     heroEyebrow: "Contractors",
     heroHeadline: "Run meter installs from dispatch to municipal Excel",
     heroSubhead:
-      "Metertron gives installation contractors one system for field capture, office review, stock, and client exports — without per-seat licence games.",
+      "Metertron gives installation contractors one system for field capture, office review, stock, and client exports — without seat-licence games.",
     painPoints: [
       {
         title: "Double capture kills margin",
@@ -73,13 +73,13 @@ export const SOLUTIONS: SolutionPage[] = [
     roi: [
       "Cut office re-keying after every route day",
       "Fewer municipal rejections from enforced evidence and review",
-      "One subscription (~R1 490/mo excl. VAT) covers unlimited installers on programme peaks",
+      "Unlimited installers on programme peaks — WhatsApp us for pricing",
       "7-day trial proves the workflow on a live suburb before you commit",
     ],
     faqs: [
       {
         q: "Is Metertron only for large contractors?",
-        a: "No. Single-team subcontractors and multi-province groups use the same plan — sized for SA meter programmes, not enterprise IT projects.",
+        a: "No. Single-team subcontractors and multi-province groups use the same product — sized for SA meter programmes, not enterprise IT projects.",
       },
       {
         q: "Can we run multiple municipal clients?",
@@ -91,7 +91,7 @@ export const SOLUTIONS: SolutionPage[] = [
       },
       {
         q: "How does billing work after trial?",
-        a: "Subscribe monthly at about R1 490 excl. VAT or pay annually as twelve monthly instalments. Prices exclude 15% VAT.",
+        a: "WhatsApp or call us for pricing.",
       },
       {
         q: "Can we integrate with our ERP?",
@@ -302,7 +302,7 @@ export const SOLUTIONS: SolutionPage[] = [
       },
       {
         q: "Can utilities mandate Metertron in tenders?",
-        a: "Yes. Specify export format and evidence rules; contractors subscribe independently on one transparent plan.",
+        a: "Yes. Specify export format and evidence rules; contractors subscribe independently on transparent Metertron access.",
       },
       {
         q: "How do webhooks help utilities?",
@@ -386,8 +386,8 @@ export const SOLUTIONS: SolutionPage[] = [
         a: "Use the 7-day trial on a controlled pilot before the main prepaid wave.",
       },
       {
-        q: "Annual billing for programme length?",
-        a: "Annual subscription equals twelve monthly payments at the same ex-VAT rate — predictable for multi-month rollouts.",
+        q: "Billing for programme length?",
+        a: "WhatsApp or call us for pricing.",
       },
     ],
     related: ["meter-replacement-programmes", "meter-installation-contractors", "water-utilities"],
@@ -449,7 +449,7 @@ export const SOLUTIONS: SolutionPage[] = [
     faqs: [
       {
         q: "Can we pause between programme phases?",
-        a: "Yes. Subscription is monthly; historical jobs remain for audits when you scale down between phases.",
+        a: "Yes. WhatsApp or call us for pricing. Historical jobs remain for audits when you scale down between phases.",
       },
       {
         q: "How do we handle conventional vs prepaid in one programme?",
@@ -538,7 +538,7 @@ export const SOLUTIONS: SolutionPage[] = [
       },
       {
         q: "Trial for a short audit contract?",
-        a: "Seven-day full trial covers short programmes; monthly billing fits seasonal audit work.",
+        a: "Seven-day full trial covers short programmes. WhatsApp or call us for pricing.",
       },
     ],
     related: ["municipalities", "photo-evidence-gps", "audit-trail", "water-utilities"],

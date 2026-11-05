@@ -134,7 +134,7 @@ export const PROGRAMME_GUIDE = {
       heading: "9. Pilot, then scale",
       paragraphs: [
         "Run a suburb-scale pilot: one supervisor team, one validated export template, two weeks of rejection metrics. Only then roll to every crew. Big-bang go-lives amplify every ambiguous field definition.",
-        "Metertron offers a single subscription plan with a 7-day trial so owners can prove the capture-to-export loop before committing. Annual billing is twelve times monthly — no seat theatre that punishes hiring installers for a peak month.",
+        "Metertron gives every organisation full product access with a 7-day trial so owners can prove the capture-to-export loop before committing — no seat theatre that punishes hiring installers for a peak month.",
         "Document the pilot outcomes for your client: first-time-right rate, average review turnaround, and batch acceptance on the pilot export. That story wins renewals more reliably than a feature brochure.",
         "Scale geographically, not randomly. Finish a ward with stable forms before opening three new suburbs with three different client templates on the same week.",
         "Budget for change management. The software is the easy part; retiring paper cards and WhatsApp evidence habits is the real migration. Pair Metertron onboarding with a clear “no parallel process after date X” rule from ownership.",

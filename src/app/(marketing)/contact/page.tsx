@@ -34,8 +34,8 @@ export default function ContactPage() {
           <MkEyebrow>Contact</MkEyebrow>
           <MkH1>Call or WhatsApp us</MkH1>
           <MkLead>
-            We arrange Metertron access privately — monthly or annual — after a conversation. Prefer WhatsApp for a
-            quick reply, or call either of us. You can still start a free trial online without contacting us first.
+            Prefer WhatsApp for a quick reply, or call either of us — including for pricing. You can still start a free
+            trial online without contacting us first.
           </MkLead>
 
           <div className="mt-10 flex flex-wrap gap-3">

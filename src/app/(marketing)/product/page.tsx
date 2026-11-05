@@ -12,7 +12,6 @@ import {
   MkSection,
 } from "@/components/marketing/ui";
 import { allFeatures } from "@/lib/marketing/content/features";
-import { PRICING } from "@/lib/marketing/pricing";
 import { pageMetadata } from "@/lib/marketing/seo";
 import { SITE } from "@/lib/marketing/site";
 
@@ -62,7 +61,9 @@ export default function ProductPage() {
           offers: {
             "@type": "Offer",
             priceCurrency: "ZAR",
-            price: (PRICING.monthlyZarCents / 100).toFixed(2),
+            availability: "https://schema.org/InStock",
+            description: "WhatsApp or call Metertron for pricing.",
+            url: `${SITE.url}/contact`,
           },
         }}
       />

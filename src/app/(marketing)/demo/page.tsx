@@ -31,12 +31,12 @@ export default function DemoPage() {
         <MkH1>See Metertron on your programme</MkH1>
         <MkLead>
           WhatsApp or call us to arrange a live walkthrough — field capture, review, and how exports map to the municipal
-          workbook you already use. Paid access is arranged with us directly after that conversation.
+          workbook you already use. WhatsApp or call us for pricing after that conversation.
         </MkLead>
         <ul className="mt-8 space-y-3 text-sm text-muted">
           <li>Live product — not a slide deck of aspirational screenshots</li>
           <li>Mapped to contractor or municipal stakeholder roles</li>
-          <li>Clear next step: free trial now, or monthly / annual access with us</li>
+          <li>Clear next step: free trial now, or WhatsApp us for pricing</li>
         </ul>
         <div className="mt-10 flex flex-wrap gap-3">
           <WhatsappCta className="border-transparent bg-[#25D366] text-white hover:brightness-105">

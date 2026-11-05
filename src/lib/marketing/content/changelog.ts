@@ -10,7 +10,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Marketing site rebuild",
     body: [
       "Public marketing pages expanded with product, features, solutions, municipality hubs and long-form resources.",
-      "Trial messaging aligned to the 7-day single-plan subscription.",
+      "Trial messaging aligned to the 7-day Metertron access.",
     ],
   },
   {
@@ -36,9 +36,9 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     date: "2025-11-01",
-    title: "Single Metertron plan",
+    title: "Metertron",
     body: [
-      "Billing simplified to one organisation subscription with full product access and a 7-day trial. Annual billing is twelve times the monthly rate.",
+      "Access simplified to full product access per organisation with a 7-day trial. WhatsApp or call us for pricing.",
     ],
   },
 ];

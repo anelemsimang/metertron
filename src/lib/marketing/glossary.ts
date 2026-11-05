@@ -255,7 +255,7 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
     term: "Subscription billing",
     short: "Recurring charge for software access, often monthly per org or seat.",
     body: [
-      "Failed payment handling should be predictable: notify admins, grace period, then feature limits. Field crews need warning before sync stops.",
+      "Access changes should be predictable: notify admins, grace period, then feature limits. Field crews need warning before sync stops.",
     ],
   },
   {

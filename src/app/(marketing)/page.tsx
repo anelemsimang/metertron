@@ -15,7 +15,7 @@ import {
   MkLead,
   MkSection,
 } from "@/components/marketing/ui";
-import { PRICING, formatZar } from "@/lib/marketing/pricing";
+import { PRICING } from "@/lib/marketing/pricing";
 import { pageMetadata } from "@/lib/marketing/seo";
 import { SITE } from "@/lib/marketing/site";
 
@@ -40,8 +40,8 @@ const faqs = [
     a: `Yes. Every new organisation gets a ${PRICING.trialDays}-day trial with full product access. No card is required to start.`,
   },
   {
-    q: "How is pricing structured?",
-    a: `One Metertron subscription per organisation at ${formatZar(PRICING.monthlyZarCents)} / month excl. VAT by default. Annual is 12 × monthly. No seat caps.`,
+    q: "How does pricing work?",
+    a: "WhatsApp or call us for pricing. Every organisation gets full product access with no seat caps.",
   },
   {
     q: "Who is Metertron for?",
@@ -75,7 +75,9 @@ export default function HomePage() {
           offers: {
             "@type": "Offer",
             priceCurrency: "ZAR",
-            price: (PRICING.monthlyZarCents / 100).toFixed(2),
+            availability: "https://schema.org/InStock",
+            description: "WhatsApp or call Metertron for pricing.",
+            url: `${SITE.url}/contact`,
           },
         }}
       />
@@ -103,7 +105,7 @@ export default function HomePage() {
       <MkSection tone="mist">
         <MkContainer>
           <MkH2>The mess Metertron replaces</MkH2>
-          <MkLead>Lost job cards, rejected municipal files, unverifiable WhatsApp photos and Excel chaos slow payment and erode trust.</MkLead>
+          <MkLead>Lost job cards, rejected municipal files, unverifiable WhatsApp photos and Excel chaos slow programmes and erode trust.</MkLead>
           <ul className="mt-10 grid gap-6 md:grid-cols-2">
             {[
               ["Lost paper cards", "Install details vanish between the trench and the office."],
@@ -200,7 +202,7 @@ export default function HomePage() {
         <MkContainer>
           <div className="grid gap-6 sm:grid-cols-3">
             {[
-              ["1 plan", "Full access per organisation"],
+              ["1 org", "Full access per organisation"],
               [`${PRICING.trialDays} days`, "Trial · no card to start"],
               ["0 seat caps", "Invite the crew you need"],
             ].map(([stat, label]) => (
@@ -256,9 +258,9 @@ export default function HomePage() {
       <MkSection>
         <MkContainer className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
-            <MkH2>Simple pricing</MkH2>
+            <MkH2>Pricing</MkH2>
             <MkLead>
-              {formatZar(PRICING.monthlyZarCents)} / month excl. VAT · annual available · {PRICING.trialDays}-day trial
+              {PRICING.trialDays}-day free trial. WhatsApp or call us for pricing.
             </MkLead>
           </div>
           <Link href="/pricing" className="inline-flex min-h-12 items-center rounded-md bg-primary px-5 text-sm font-semibold text-on-primary">

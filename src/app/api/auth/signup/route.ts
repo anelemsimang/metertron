@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     if (await hasUsedFreeTrial(email)) {
       return Response.json(
         {
-          error: "This email has already used the free trial. WhatsApp or call us to arrange paid access.",
+          error: "This email has already used the free trial. WhatsApp or call us for pricing.",
         },
         { status: 403 },
       );

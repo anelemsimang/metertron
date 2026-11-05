@@ -9,10 +9,10 @@ export function AuthorBox({ name, role }: { name: string; role: string }) {
     <div className="mt-10 flex items-center gap-4 rounded-xl border border-line bg-white p-4">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--mt-mist)] font-semibold text-[var(--mt-grove)]">
         {name
-          .split(" ")
-          .map((part) => part[0])
-          .join("")
-          .slice(0, 2)}
+.split(" ")
+.map((part) => part[0])
+.join("")
+.slice(0, 2)}
       </div>
       <div>
         <p className="font-semibold text-[var(--mt-grove)]">{name}</p>
@@ -71,7 +71,7 @@ export function BlogTrialPrompt() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-semibold text-[var(--mt-grove)]">Try Metertron free for 7 days</p>
-          <p className="mt-1 text-sm text-muted">Full product access for your organisation. No card to start.</p>
+          <p className="mt-1 text-sm text-muted">Full product access for your organisation. WhatsApp or call us for pricing.</p>
           <div className="mt-3">
             <CtaPrimary />
           </div>

@@ -30,14 +30,14 @@ export const LEGAL_PAGES: LegalPage[] = [
         heading: "The service",
         paragraphs: [
           "Metertron provides cloud software for meter installation and change contractors: field capture, office review, stock and work-order tooling, and configurable export templates for municipal-style submissions. Features may change as we improve the product; we aim to give reasonable notice of material changes that affect paid customers.",
-          "We offer a single subscription plan with a time-limited trial. Trial access is provided as-is so your organisation can evaluate fit; converting to paid access continues under these terms unless superseded by an enterprise agreement in writing.",
+          "We offer full product access with a time-limited trial. Trial access is provided as-is so your organisation can evaluate fit; continued access after trial continues under these terms unless superseded by an enterprise agreement in writing.",
         ],
       },
       {
         heading: "Accounts and organisations",
         paragraphs: [
           "You are responsible for users invited into your organisation, for safeguarding login credentials and second factors, and for activity under your tenant. Organisation administrators control roles, exports, and data retention settings exposed in the product.",
-          "You must provide accurate billing and contact details. We may suspend access for non-payment after notice, or immediately where we reasonably believe the account is used for fraud, abuse, or unlawful processing of personal information.",
+          "You must provide accurate organisation and contact details. We may suspend access after notice where access terms are not met, or immediately where we reasonably believe the account is used for fraud, abuse, or unlawful processing of personal information.",
         ],
       },
       {
@@ -51,7 +51,7 @@ export const LEGAL_PAGES: LegalPage[] = [
         heading: "Acceptable use and limitations",
         paragraphs: [
           "Do not attempt to bypass tenant isolation, probe other organisations’ data, or use the platform to distribute malware. Automated scraping of the marketing site or authenticated APIs outside documented limits is not permitted.",
-          "The service is provided with commercially reasonable uptime targets described in our SLA draft. Except where law prohibits exclusion, liability is limited to fees paid in the twelve months before the claim. Nothing in these draft terms limits liability for gross negligence or wilful misconduct.",
+          "The service is provided with commercially reasonable uptime targets described in our SLA draft. Except where law prohibits exclusion, liability is limited as set out in the final agreement. Nothing in these draft terms limits liability for gross negligence or wilful misconduct.",
         ],
       },
       {
@@ -79,7 +79,7 @@ export const LEGAL_PAGES: LegalPage[] = [
       {
         heading: "Information we collect",
         paragraphs: [
-          "We collect names, email addresses, organisation details, and authentication logs for users who sign up or are invited. Payment processing may involve our payment provider; we store subscription status and invoicing references, not full card numbers on our servers.",
+          "We collect names, email addresses, organisation details, and authentication logs for users who sign up or are invited. We store organisation access status as needed to operate the service.",
           "Within the product, organisations store job facts, meter serials, photos, GPS where enabled, and free-text notes their field teams enter. That content belongs to the customer organisation; we host it in encrypted storage with tenant isolation.",
         ],
       },
@@ -300,13 +300,13 @@ export const LEGAL_PAGES: LegalPage[] = [
     slug: "sla",
     title: "Service Level Agreement (Draft)",
     metaDescription:
-      "Draft uptime and support targets for Metertron’s single SaaS plan.",
+      "Draft uptime and support targets for Metertron’s Metertron.",
     draftNotice: true,
     sections: [
       {
         heading: "Draft notice",
         paragraphs: [
-          "This Service Level Agreement (SLA) is a draft for paid subscriptions on Metertron’s standard plan. Enterprise customers may negotiate separate terms.",
+          "This Service Level Agreement (SLA) is a draft for paid subscriptions on Metertron’s standard access. Enterprise customers may negotiate separate terms.",
         ],
       },
       {

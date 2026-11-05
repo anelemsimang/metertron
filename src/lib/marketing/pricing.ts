@@ -1,14 +1,11 @@
 import { METERTRON_PLAN, TRIAL_DAYS } from "@/server/billing/plans";
-import { annualFromMonthly } from "@/server/billing/vat";
 
+/** Public marketing access copy — pricing is only via WhatsApp or call. */
 export const PRICING = {
   planName: METERTRON_PLAN.name,
   description: METERTRON_PLAN.description,
-  monthlyZarCents: METERTRON_PLAN.amountMonthlyZarCents,
-  annualZarCents: annualFromMonthly(METERTRON_PLAN.amountMonthlyZarCents),
   trialDays: TRIAL_DAYS,
-  currency: "ZAR",
-  vatNote: "Prices exclude 15% VAT.",
+  consultNote: "WhatsApp or call us for pricing.",
   features: [
     "Field capture with offline sync",
     "Office review, stock, and work orders",
@@ -18,7 +15,3 @@ export const PRICING = {
     "No seat or install caps",
   ],
 } as const;
-
-export function formatZar(cents: number) {
-  return new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(cents / 100);
-}

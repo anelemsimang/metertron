@@ -151,7 +151,7 @@ function PlatformOrgsInner() {
       <div>
         <h1 className="text-xl font-semibold">Organisations</h1>
         <p className="mt-1 text-sm text-slate-400">
-          Search tenants, activate monthly or annual access after private payment, and start audited support access.
+          Search tenants, activate access after you have spoken with them, and start audited support access.
         </p>
       </div>
 

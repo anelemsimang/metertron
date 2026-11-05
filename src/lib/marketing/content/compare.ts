@@ -66,7 +66,7 @@ export const COMPARE_PAGES: ComparePage[] = [
       },
       {
         criterion: "Cost at scale",
-        metertron: "One plan (~R1 490/mo excl. VAT), unlimited seats; 7-day trial.",
+        metertron: "Full product access, unlimited seats; 7-day trial; WhatsApp or call us for pricing.",
         other: "Low direct cost — hidden cost in rework, rejections, and extra office hours.",
       },
     ],
@@ -146,7 +146,7 @@ export const COMPARE_PAGES: ComparePage[] = [
       },
       {
         criterion: "Total cost",
-        metertron: "Predictable subscription; no seat caps on the single plan.",
+        metertron: "Predictable subscription; no seat caps on the full product access.",
         other: "‘Free’ tools — expensive in senior time fixing rows and rejections.",
       },
     ],
@@ -162,7 +162,7 @@ export const COMPARE_PAGES: ComparePage[] = [
       },
       {
         q: "What about programme planning sheets?",
-        a: "Keep planning in Excel if you like. Import or assign stands via work orders and API rather than living capture in the plan file.",
+        a: "Keep planning in Excel if you like. Import or assign stands via work orders and API rather than living capture in the planning file.",
       },
       {
         q: "Google Sheets on mobile?",
@@ -215,8 +215,8 @@ export const COMPARE_PAGES: ComparePage[] = [
         other: "Inventory modules often priced separately or absent.",
       },
       {
-        criterion: "Pricing model",
-        metertron: "Single plan ~R1 490/mo excl. VAT, unlimited seats, 7-day trial.",
+        criterion: "Access model",
+        metertron: "Full product access, unlimited seats, 7-day trial; WhatsApp or call us for pricing.",
         other: "Per-user or per-job pricing scales badly on large rollouts.",
       },
       {
@@ -233,7 +233,7 @@ export const COMPARE_PAGES: ComparePage[] = [
     summary: [
       "Generic field service apps win when your work looks like ‘go fix a leak’ or ‘service a geyser’. Meter replacement contracts look like structured data programmes with photographic evidence and spreadsheet SLAs — a different problem.",
       "Metertron trades breadth for depth: you will not get arbitrary industry modules, but you do get meter capture, review, stock, and municipal exports in one subscription without custom development.",
-      "If you already pay per seat for a horizontal tool and still maintain Excel for the municipality, compare total cost — licences plus hidden spreadsheet labour — against one meter-native plan on trial.",
+      "If you already pay per seat for a horizontal tool and still maintain Excel for the municipality, compare total cost — licences plus hidden spreadsheet labour — against Metertron on trial.",
     ],
     faqs: [
       {

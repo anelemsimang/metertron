@@ -45,7 +45,7 @@ const STATIC: MarketingRoute[] = [
   {
     path: "/pricing",
     title: "Pricing – Metertron Meter Installation Software",
-    description: "Simple plans in ZAR for contractors of every size. Start a 7-day free trial, no card required.",
+    description: "Start a free Metertron trial. WhatsApp or call us for pricing.",
     section: "pages",
     priority: 0.9,
   },
@@ -247,8 +247,8 @@ export function buildMarketingRouteRegistry(): MarketingRoute[] {
 
 export function marketingRoutesForSitemap() {
   return allMarketingRoutes()
-    .filter((route) => !route.noIndex)
-    .map((route) => ({
+.filter((route) => !route.noIndex)
+.map((route) => ({
       path: route.path,
       lastModified: route.lastmod,
       changeFrequency: route.changeFrequency ?? "monthly",
@@ -276,9 +276,9 @@ export function findDuplicateSeo(routes: MarketingRoute[]) {
 
 export function orphanRouteWarnings(routes: MarketingRoute[]): string[] {
   return routes
-    .filter((route) => !route.noIndex)
-    .filter((route) => !HUB_LINKS.has(route.path))
-    .filter((route) => {
+.filter((route) => !route.noIndex)
+.filter((route) => !HUB_LINKS.has(route.path))
+.filter((route) => {
       if (route.path.startsWith("/features/")) return !HUB_LINKS.has("/product");
       if (route.path.startsWith("/solutions/")) return true;
       if (route.path.startsWith("/municipalities/")) return false;
@@ -287,5 +287,5 @@ export function orphanRouteWarnings(routes: MarketingRoute[]): string[] {
       if (route.path.startsWith("/compare/")) return true;
       return !HUB_LINKS.has(route.path);
     })
-    .map((route) => route.path);
+.map((route) => route.path);
 }

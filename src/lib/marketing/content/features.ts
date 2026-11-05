@@ -79,11 +79,11 @@ export const FEATURES: FeaturePage[] = [
       },
       {
         q: "Is there a limit on installers?",
-        a: "Metertron’s single plan does not cap seats or installs. Add team members and invite them to your organisation.",
+        a: "Metertron does not cap seats or installs. Add team members and invite them to your organisation.",
       },
       {
         q: "How does the trial work?",
-        a: "Start a 7-day trial with full product access. After trial, subscribe at about R1 490 per month excl. VAT, or pay annually as twelve monthly instalments.",
+        a: "Start a 7-day trial with full product access. WhatsApp or call us for pricing.",
       },
     ],
     related: ["offline-mode", "photo-evidence-gps", "review-approval-workflow", "job-scheduling"],
@@ -154,8 +154,8 @@ export const FEATURES: FeaturePage[] = [
         a: "GPS capture uses device location when available. If coordinates are missing offline, your process may require a photo of the stand or manual location notes.",
       },
       {
-        q: "Is offline included in the standard plan?",
-        a: "Yes. Offline field capture is part of full Metertron access — one plan, about R1 490 per month excl. VAT, with a 7-day trial to prove it on your routes.",
+        q: "Is offline included in the standard access?",
+        a: "Yes. Offline field capture is included. Start a 7-day trial to prove it on your routes. WhatsApp or call us for pricing.",
       },
     ],
     related: ["field-capture-app", "photo-evidence-gps", "audit-trail", "review-approval-workflow"],
@@ -303,7 +303,7 @@ export const FEATURES: FeaturePage[] = [
       },
       {
         q: "Is the review queue included in trial?",
-        a: "Full access during the 7-day trial includes review, exports, and team features on the single Metertron plan.",
+        a: "Full access during the 7-day trial includes review, exports, and team features on the Metertron.",
       },
     ],
     related: ["municipal-export-templates", "team-roles-permissions", "dashboards-reporting", "audit-trail"],
@@ -447,7 +447,7 @@ export const FEATURES: FeaturePage[] = [
       },
       {
         q: "Is reporting in the trial?",
-        a: "Yes — trial includes the same office visibility as the paid plan.",
+        a: "Yes — trial includes the same office visibility as full Metertron access.",
       },
     ],
     related: ["review-approval-workflow", "municipal-export-templates", "job-scheduling", "audit-trail"],
@@ -466,8 +466,8 @@ export const FEATURES: FeaturePage[] = [
       "Invite your organisation, assign roles, and keep municipal templates and exports out of installers’ hands — without paying per seat.",
     benefits: [
       {
-        title: "No per-seat pricing",
-        body: "Add field and office users on one plan — about R1 490 per month excl. VAT — so you scale teams without licence maths.",
+        title: "No seat caps",
+        body: "Add field and office users so you scale teams without licence maths. WhatsApp us for pricing.",
       },
       {
         title: "Role-based office control",
@@ -590,7 +590,7 @@ export const FEATURES: FeaturePage[] = [
         a: "Work orders carry scheduling metadata your office uses to prioritise field queues.",
       },
       {
-        q: "Is scheduling included in one plan?",
+        q: "Is scheduling included in full product access?",
         a: "Work orders, field capture, review, and exports are all included — no module upsell.",
       },
     ],
@@ -663,7 +663,7 @@ export const FEATURES: FeaturePage[] = [
       },
       {
         q: "Does API access cost extra?",
-        a: "API keys and webhooks are included in the single Metertron plan.",
+        a: "API keys and webhooks are included in the Metertron.",
       },
     ],
     related: ["municipal-export-templates", "audit-trail", "team-roles-permissions", "dashboards-reporting"],

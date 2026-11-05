@@ -128,9 +128,9 @@ export function BillingPanel() {
     return <p className="text-sm text-muted">{error || "Loading billing…"}</p>;
   }
 
+  const subscribed = overview.organisation.status === "active" && overview.subscription?.status === "active";
   const monthly = overview.plan?.amountMonthlyZarCents ?? 0;
   const amount = interval === "annual" ? monthly * 12 : monthly;
-  const subscribed = overview.organisation.status === "active" && overview.subscription?.status === "active";
 
   return (
     <div className="space-y-6">
@@ -154,7 +154,7 @@ export function BillingPanel() {
             Checkout: {provider === "stub" ? "local stub (set PAYSTACK_SECRET_KEY for Paystack)" : "Paystack"}
           </p>
         ) : (
-          <p className="mt-2 text-xs text-muted">Online checkout is off — Metertron activates access after you arrange payment with us.</p>
+          <p className="mt-2 text-xs text-muted">WhatsApp or call us for pricing. We activate access from our side.</p>
         )}
       </section>
 
@@ -164,23 +164,25 @@ export function BillingPanel() {
         <p className="mt-3 text-sm font-semibold text-brand">Full product access for this organisation</p>
         <ul className="mt-2 space-y-1 text-sm text-muted">
           <li>Field capture, review, exports, templates, forms, team, and stock</li>
-          <li>No seat or install caps on this plan</li>
+          <li>No seat or install caps</li>
         </ul>
 
-        <div className="mt-5 flex flex-wrap items-center gap-3">
-          <div className="flex rounded-md bg-canvas p-1 text-sm font-semibold">
-            <button type="button" onClick={() => setInterval("monthly")} className={`min-h-10 rounded-md px-3 ${interval === "monthly" ? "bg-surface shadow-sm" : "text-muted"}`}>
-              Monthly
-            </button>
-            <button type="button" onClick={() => setInterval("annual")} className={`min-h-10 rounded-md px-3 ${interval === "annual" ? "bg-surface shadow-sm" : "text-muted"}`}>
-              Annual
-            </button>
+        {checkoutEnabled ? (
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <div className="flex rounded-md bg-canvas p-1 text-sm font-semibold">
+              <button type="button" onClick={() => setInterval("monthly")} className={`min-h-10 rounded-md px-3 ${interval === "monthly" ? "bg-surface shadow-sm" : "text-muted"}`}>
+                Monthly
+              </button>
+              <button type="button" onClick={() => setInterval("annual")} className={`min-h-10 rounded-md px-3 ${interval === "annual" ? "bg-surface shadow-sm" : "text-muted"}`}>
+                Annual
+              </button>
+            </div>
+            <p className="text-2xl font-bold">
+              {zar(amount)}
+              <span className="text-sm font-medium text-muted"> {interval === "annual" ? "/ year excl. VAT" : "/ month excl. VAT"}</span>
+            </p>
           </div>
-          <p className="text-2xl font-bold">
-            {zar(amount)}
-            <span className="text-sm font-medium text-muted"> {interval === "annual" ? "/ year excl. VAT" : "/ month excl. VAT"}</span>
-          </p>
-        </div>
+        ) : null}
 
         {checkoutEnabled ? (
           <button
@@ -189,14 +191,14 @@ export function BillingPanel() {
             onClick={() => void subscribe()}
             className="mt-5 min-h-12 rounded-md bg-primary px-5 font-semibold text-on-primary disabled:opacity-60"
           >
-            {subscribed ? "Subscribed" : pending ? "Please wait…" : "Subscribe"}
+            {subscribed ? "Active" : pending ? "Please wait…" : "Subscribe"}
           </button>
         ) : (
           <div className="mt-5 space-y-3">
             <p className="text-sm text-muted">
               {subscribed
-                ? "Your organisation is on an active plan managed by Metertron."
-                : "To renew or move from trial to paid access, arrange payment with Metertron. We activate monthly or annual access from our side."}
+                ? "Your organisation has active Metertron access."
+                : "To renew or continue after trial, WhatsApp or call us for pricing. We activate access from our side."}
             </p>
             <div className="flex flex-wrap gap-2">
               {contact?.whatsappUrl ? (

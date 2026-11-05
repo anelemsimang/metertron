@@ -9,8 +9,7 @@ import { SITE } from "@/lib/marketing/site";
 
 export const metadata: Metadata = pageMetadata({
   title: "Pricing – Metertron Meter Installation Software",
-  description:
-    "Simple plans in ZAR for contractors of every size. Start a 7-day free trial, no card required.",
+  description: "Start a free Metertron trial. WhatsApp or call us for pricing.",
   path: "/pricing",
 });
 
@@ -25,11 +24,11 @@ export default function PricingPage() {
           applicationCategory: "BusinessApplication",
           operatingSystem: "Web",
           offers: {
-            "@type": "AggregateOffer",
+            "@type": "Offer",
             priceCurrency: "ZAR",
-            lowPrice: (PRICING.monthlyZarCents / 100).toFixed(2),
-            highPrice: (PRICING.annualZarCents / 100).toFixed(2),
-            offerCount: 2,
+            availability: "https://schema.org/InStock",
+            description: "WhatsApp or call Metertron for pricing.",
+            url: `${SITE.url}/contact`,
           },
         }}
       />
@@ -41,9 +40,9 @@ export default function PricingPage() {
               { name: "Pricing", path: "/pricing" },
             ]}
           />
-          <MkH1>Simple pricing in ZAR</MkH1>
+          <MkH1>Pricing</MkH1>
           <MkLead>
-            One plan for contractors of every size. Start a {PRICING.trialDays}-day free trial — no card required.
+            Start a {PRICING.trialDays}-day free trial with full product access. WhatsApp or call us for pricing.
           </MkLead>
           <PricingTable />
           <p className="mt-8 text-sm">
