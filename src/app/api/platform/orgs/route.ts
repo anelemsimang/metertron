@@ -52,7 +52,7 @@ export async function PATCH(request: Request) {
         targetType: "organisation",
         targetId: organisationId,
         summary: `Activated ${interval} access`,
-        payload: { interval, ...period },
+        payload: { ...period },
         ipAddress: await clientIp(),
       });
       return Response.json({ ok: true, subscription: period });
