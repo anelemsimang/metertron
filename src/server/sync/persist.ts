@@ -78,7 +78,8 @@ export async function acceptSyncedJob(idempotencyKey: string, answers: Record<st
       .limit(1);
     // Never trust a field-entered company name — lock to the registered tenant.
     const companyName = (org?.name?.trim() || contract?.companyName?.trim() || user.organisationName || "").trim() || null;
-    const lockedAnswers = { ...answers, ...(companyName ? { companyName } : {}) };
+    const lockedAnswers: Record<string, unknown> = { ...answers };
+    if (companyName) lockedAnswers.companyName = companyName;
     const [form] = contract
       ? await db
           .select({ id: formVersions.id })
