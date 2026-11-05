@@ -2,7 +2,20 @@ import { and, count, eq, inArray, sql } from "drizzle-orm";
 import type { SessionUser } from "@/server/auth/session";
 import { getDb, withOrg } from "@/server/db/client";
 import { catalogId } from "@/server/db/reference";
-import { contractGrants, contracts, formVersions, installers, jobFaults, jobPhotos, jobs, stockItems, stockMovements, towns, workOrders } from "@/server/db/schema";
+import {
+  contractGrants,
+  contracts,
+  formVersions,
+  installers,
+  jobFaults,
+  jobPhotos,
+  jobs,
+  organisations,
+  stockItems,
+  stockMovements,
+  towns,
+  workOrders,
+} from "@/server/db/schema";
 import { storePhotoBytes } from "@/server/storage/photos";
 
 const FAULTS = [
@@ -53,7 +66,19 @@ export async function acceptSyncedJob(idempotencyKey: string, answers: Record<st
       return { id: existing.id, duplicate: true };
     }
 
-    const [contract] = await db.select({ id: contracts.id }).from(contracts).where(eq(contracts.organisationId, user.organisationId)).limit(1);
+    const [org] = await db
+      .select({ name: organisations.name })
+      .from(organisations)
+      .where(eq(organisations.id, user.organisationId))
+      .limit(1);
+    const [contract] = await db
+      .select({ id: contracts.id, companyName: contracts.companyName })
+      .from(contracts)
+      .where(eq(contracts.organisationId, user.organisationId))
+      .limit(1);
+    // Never trust a field-entered company name — lock to the registered tenant.
+    const companyName = (org?.name?.trim() || contract?.companyName?.trim() || user.organisationName || "").trim() || null;
+    const lockedAnswers = { ...answers, ...(companyName ? { companyName } : {}) };
     const [form] = contract
       ? await db
           .select({ id: formVersions.id })
@@ -80,8 +105,8 @@ export async function acceptSyncedJob(idempotencyKey: string, answers: Record<st
         .onConflictDoNothing();
     }
 
-    const installation = text(answers.installation);
-    const premise = text(answers.premise);
+    const installation = text(lockedAnswers.installation);
+    const premise = text(lockedAnswers.premise);
     const now = new Date();
     try {
       const [job] = await db
@@ -93,36 +118,36 @@ export async function acceptSyncedJob(idempotencyKey: string, answers: Record<st
           enumeratorId: user.id,
           installerId: installer?.id ?? null,
           townId: town?.id ?? null,
-          meterSizeId: contract ? await catalogId(contract.id, "size", text(answers.meterSizeId) ?? "") : null,
-          meterClassId: contract ? await catalogId(contract.id, "class", text(answers.meterClassId) ?? "") : null,
-          meterTypeId: contract ? await catalogId(contract.id, "type", text(answers.meterTypeId) ?? "") : null,
+          meterSizeId: contract ? await catalogId(contract.id, "size", text(lockedAnswers.meterSizeId) ?? "") : null,
+          meterClassId: contract ? await catalogId(contract.id, "class", text(lockedAnswers.meterClassId) ?? "") : null,
+          meterTypeId: contract ? await catalogId(contract.id, "type", text(lockedAnswers.meterTypeId) ?? "") : null,
           status: "submitted",
           draftedOn: now,
           submittedOn: now,
           lastModifiedBy: user.id,
-          jobDate: text(answers.date),
+          jobDate: text(lockedAnswers.date),
           installation: installation && INSTALLATIONS.has(installation) ? (installation as "meter_only") : null,
           premise: premise && PREMISES.has(premise) ? (premise as "domestic") : null,
-          companyName: text(answers.companyName),
-          cardNumber: text(answers.cardNumber),
-          jobNumber: text(answers.jobNumber),
-          houseNumber: text(answers.houseNumber),
-          street: text(answers.street),
-          unitNumber: text(answers.unitNumber),
-          lotNumber: text(answers.lotNumber),
-          otherReason: text(answers.other),
-          newMeterNumber: text(answers.newMeterNumber),
-          smartDeviceNumber: text(answers.smartDeviceNumber),
-          smartDeviceReading: wholeNumber(answers.smartDeviceReading),
-          oldMeterNumber: text(answers.oldMeterNumber),
-          oldMeterNotOnList: flag(answers.oldMeterNotOnList),
-          oldMeterListNote: text(answers.oldMeterListNote),
-          oldMeterReading: wholeNumber(answers.oldMeterReading),
-          connectionNumber: text(answers.connectionNumber),
-          connectionNotOnList: flag(answers.connectionNotOnList),
-          connectionListNote: text(answers.connectionListNote),
-          accountNumber: text(answers.accountNumber),
-          answers,
+          companyName,
+          cardNumber: text(lockedAnswers.cardNumber),
+          jobNumber: text(lockedAnswers.jobNumber),
+          houseNumber: text(lockedAnswers.houseNumber),
+          street: text(lockedAnswers.street),
+          unitNumber: text(lockedAnswers.unitNumber),
+          lotNumber: text(lockedAnswers.lotNumber),
+          otherReason: text(lockedAnswers.other),
+          newMeterNumber: text(lockedAnswers.newMeterNumber),
+          smartDeviceNumber: text(lockedAnswers.smartDeviceNumber),
+          smartDeviceReading: wholeNumber(lockedAnswers.smartDeviceReading),
+          oldMeterNumber: text(lockedAnswers.oldMeterNumber),
+          oldMeterNotOnList: flag(lockedAnswers.oldMeterNotOnList),
+          oldMeterListNote: text(lockedAnswers.oldMeterListNote),
+          oldMeterReading: wholeNumber(lockedAnswers.oldMeterReading),
+          connectionNumber: text(lockedAnswers.connectionNumber),
+          connectionNotOnList: flag(lockedAnswers.connectionNotOnList),
+          connectionListNote: text(lockedAnswers.connectionListNote),
+          accountNumber: text(lockedAnswers.accountNumber),
+          answers: lockedAnswers,
           idempotencyKey,
         })
         .returning({ id: jobs.id });

@@ -26,5 +26,16 @@ export default async function FieldLayout({ children }: { children: ReactNode })
     );
   }
   if (!user) redirect("/login?next=/field");
-  return <FieldShell user={{ name: user.name, username: user.username, email: user.email }}>{children}</FieldShell>;
+  return (
+    <FieldShell
+      user={{
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        organisationName: user.organisationName,
+      }}
+    >
+      {children}
+    </FieldShell>
+  );
 }

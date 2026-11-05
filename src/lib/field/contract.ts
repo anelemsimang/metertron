@@ -1,5 +1,5 @@
 import { METER_CHANGE_V1 } from "@/domain/forms/meter-change-v1";
-import { readTechProfile } from "@/lib/field/profile";
+import { organisationCompanyName, readTechProfile } from "@/lib/field/profile";
 import type { Answers } from "@/domain/forms/types";
 
 export const ADDRESS_FIELDS = ["houseNumber", "street", "unitNumber", "lotNumber", "townId"] as const;
@@ -12,9 +12,10 @@ const meterCatalog = {
 
 export function defaultAnswers(): Answers {
   const tech = readTechProfile();
+  const companyName = organisationCompanyName();
   return {
     date: new Date().toISOString().slice(0, 10),
-    companyName: "",
+    ...(companyName ? { companyName } : {}),
     other: "Meter replacement",
     meterSizeId: meterCatalog.size[0].code,
     meterClassId: meterCatalog.class[0].code,
@@ -22,6 +23,13 @@ export function defaultAnswers(): Answers {
     installerId: tech.name,
     smartDeviceReading: 0,
   };
+}
+
+/** Keep locked org fields aligned with the signed-in tenant (overrides local edits). */
+export function applyOrganisationDefaults(answers: Answers): Answers {
+  const companyName = organisationCompanyName();
+  if (!companyName) return answers;
+  return { ...answers, companyName };
 }
 
 export function catalogOptions(kind: "size" | "class" | "type") {

@@ -1,17 +1,18 @@
 import { METER_CHANGE_V1 } from "@/domain/forms/meter-change-v1";
 import { normaliseAnswers } from "@/domain/forms/normalise";
 import type { Answers } from "@/domain/forms/types";
-import { ADDRESS_FIELDS, defaultAnswers } from "@/lib/field/contract";
+import { ADDRESS_FIELDS, applyOrganisationDefaults, defaultAnswers } from "@/lib/field/contract";
 import { fieldDb, notifyField, type DraftRecord, type PhotoRecord } from "@/lib/field/db";
 import { randomId } from "@/lib/field/id";
 
 export async function createDraft(seed?: Answers): Promise<DraftRecord> {
   const now = Date.now();
-  const answers = defaultAnswers();
+  const answers = applyOrganisationDefaults(defaultAnswers());
   if (seed) {
     for (const [key, value] of Object.entries(seed)) {
       if (value == null) continue;
       if (typeof value === "string" && value.trim() === "") continue;
+      if (key === "companyName") continue;
       answers[key] = key === "oldMeterNumber" || key === "connectionNumber" ? String(value).toUpperCase() : value;
     }
   }
@@ -33,7 +34,7 @@ export async function createDraft(seed?: Answers): Promise<DraftRecord> {
 
 export async function saveAnswers(id: string, answers: Answers) {
   await fieldDb.drafts.update(id, {
-    answers: normaliseAnswers(METER_CHANGE_V1, answers),
+    answers: normaliseAnswers(METER_CHANGE_V1, applyOrganisationDefaults(answers)),
     syncState: "local",
     updatedAt: Date.now(),
   });
@@ -50,7 +51,7 @@ export async function lastAddress(exceptId: string) {
 }
 
 export async function answersWithPhotos(draft: DraftRecord, photos: PhotoRecord[]): Promise<Answers> {
-  const answers: Answers = { ...draft.answers };
+  const answers: Answers = applyOrganisationDefaults({ ...draft.answers });
   for (const section of METER_CHANGE_V1.sections) {
     for (const field of section.fields) {
       if (field.type !== "photo") continue;

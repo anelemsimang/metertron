@@ -7,7 +7,7 @@ import { blockingIssues, validateForm } from "@/domain/forms/validate";
 import type { Answers, FormField } from "@/domain/forms/types";
 import { AppLoading } from "@/components/brand/app-loading";
 import { BarcodeScanner } from "@/components/field/barcode-scanner";
-import { catalogOptions, installerOptions } from "@/lib/field/contract";
+import { applyOrganisationDefaults, catalogOptions, installerOptions } from "@/lib/field/contract";
 import { fieldDb, subscribeField, type DraftRecord, type PhotoRecord } from "@/lib/field/db";
 import { answersWithPhotos, createDraft, lastAddress, saveAnswers } from "@/lib/field/drafts";
 import { addPhoto, removePhoto } from "@/lib/field/photos";
@@ -65,10 +65,11 @@ export function CaptureWizard() {
       const existing = draftId ? await fieldDb.drafts.get(draftId) : undefined;
       if (existing) {
         if (cancelled) return;
-        lastSaved.current = JSON.stringify(existing.answers);
+        const seeded = applyOrganisationDefaults(existing.answers);
+        lastSaved.current = JSON.stringify(seeded);
         setDraft(existing);
-        setAnswers(existing.answers);
-        setTownQuery(typeof existing.answers.townId === "string" ? existing.answers.townId : "");
+        setAnswers(seeded);
+        setTownQuery(typeof seeded.townId === "string" ? seeded.townId : "");
         ready.current = true;
         return;
       }
@@ -136,11 +137,13 @@ export function CaptureWizard() {
   }, [focusFieldId, step]);
 
   function setField(id: string, value: unknown) {
+    const field = METER_CHANGE_V1.sections.flatMap((section) => section.fields).find((item) => item.id === id);
+    if (field?.locked) return;
     setAnswers((current) => {
       const next = { ...current };
       if (value === "" || value == null) delete next[id];
       else next[id] = value;
-      return next;
+      return applyOrganisationDefaults(next);
     });
   }
 
@@ -430,11 +433,12 @@ function FieldControl({
           inputMode={field.type === "integer" || field.id === "smartDeviceNumber" ? "numeric" : "text"}
           readOnly={field.locked || frozen}
           onChange={(event) => {
+            if (field.locked || frozen) return;
             const next = maskValue(field.id, event.target.value);
             if (field.type === "integer") onChange(field.id, next === "" ? "" : Number(next));
             else onChange(field.id, next);
           }}
-          className={inputClass}
+          className={`${inputClass}${field.locked ? " bg-canvas text-muted" : ""}`}
         />
         {SCAN_FIELDS.has(field.id) ? (
           <button type="button" onClick={onScan} disabled={frozen} className="min-h-12 shrink-0 rounded-md border-2 border-brand px-3 text-sm font-semibold text-brand disabled:opacity-40">

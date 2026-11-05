@@ -19,7 +19,13 @@ const tabs = [
   { href: "/field/account", label: "Account", icon: UserRound },
 ];
 
-export function FieldShell({ children, user }: { children: ReactNode; user: { name: string; username: string; email: string } }) {
+export function FieldShell({
+  children,
+  user,
+}: {
+  children: ReactNode;
+  user: { name: string; username: string; email: string; organisationName: string };
+}) {
   return (
     <SyncProvider>
       <FieldFrame user={user}>{children}</FieldFrame>
@@ -27,7 +33,13 @@ export function FieldShell({ children, user }: { children: ReactNode; user: { na
   );
 }
 
-function FieldFrame({ children, user }: { children: ReactNode; user: { name: string; username: string; email: string } }) {
+function FieldFrame({
+  children,
+  user,
+}: {
+  children: ReactNode;
+  user: { name: string; username: string; email: string; organisationName: string };
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const { state, offline } = useSyncStatus();
@@ -35,9 +47,9 @@ function FieldFrame({ children, user }: { children: ReactNode; user: { name: str
 
   useEffect(() => {
     setSunlight(readMigratedStorage("sunlight") === "on");
-    writeTechProfile({ name: user.name, username: user.username });
+    writeTechProfile({ name: user.name, username: user.username, organisationName: user.organisationName });
     for (const tab of tabs) router.prefetch(tab.href);
-  }, [router, user.name, user.username]);
+  }, [router, user.name, user.organisationName, user.username]);
 
   function toggleSunlight() {
     const next = !sunlight;

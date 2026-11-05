@@ -99,7 +99,7 @@ export default function FormSchemaPage() {
             ["Connection not on list", "flag", `${LIST_PHRASES.connectionValue} in connection (2). Connection (1) stays blank.`],
             ["Approved status", "approved", "Approved jobs export as Final."],
             ["Size, class, type", "contract list", "The field app offers 15mm, Class D, and Ultrasonic."],
-            ["Company", "entered on the job", "Entered on the job."],
+            ["Company", "organisation name", "Locked to the registered Metertron organisation."],
           ].map(([field, stored, exported]) => (
             <li key={field} className="rounded-lg border border-line bg-surface p-4 text-sm shadow-sm">
               <p className="font-semibold">{field}</p>
@@ -159,8 +159,8 @@ export default function FormSchemaPage() {
               </tr>
               <tr className="border-t border-line">
                 <td className="px-3 py-2">Company</td>
-                <td className="px-3 py-2">entered on the job</td>
-                <td className="px-3 py-2">Entered on the job.</td>
+                <td className="px-3 py-2">organisation name</td>
+                <td className="px-3 py-2">Locked to the registered Metertron organisation.</td>
               </tr>
             </tbody>
           </table>
