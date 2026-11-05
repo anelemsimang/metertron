@@ -49,13 +49,30 @@ export function BillingPanel() {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [usage, setUsage] = useState<Usage | null>(null);
   const [provider, setProvider] = useState("stub");
+  const [checkoutEnabled, setCheckoutEnabled] = useState(false);
+  const [contact, setContact] = useState<{
+    whatsappUrl: string | null;
+    whatsappName?: string;
+    phones: Array<{ name: string; display: string; tel: string }>;
+  } | null>(null);
   const [interval, setInterval] = useState<"monthly" | "annual">("monthly");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
 
   async function load() {
     const response = await fetch("/api/office/billing");
-    const body = (await response.json()) as { overview?: Overview; usage?: Usage; provider?: string; error?: string };
+    const body = (await response.json()) as {
+      overview?: Overview;
+      usage?: Usage;
+      provider?: string;
+      checkoutEnabled?: boolean;
+      contact?: {
+        whatsappUrl: string | null;
+        whatsappName?: string;
+        phones: Array<{ name: string; display: string; tel: string }>;
+      };
+      error?: string;
+    };
     if (!response.ok) {
       setError(body.error ?? "Could not load billing.");
       return;
@@ -63,6 +80,8 @@ export function BillingPanel() {
     setOverview(body.overview ?? null);
     setUsage(body.usage ?? null);
     setProvider(body.provider ?? "stub");
+    setCheckoutEnabled(Boolean(body.checkoutEnabled));
+    setContact(body.contact ?? null);
   }
 
   useEffect(() => {
@@ -130,9 +149,13 @@ export function BillingPanel() {
             ? ` · grace until ${new Date(overview.subscription.graceEndsAt).toLocaleDateString("en-ZA")}`
             : null}
         </p>
-        <p className="mt-2 text-xs text-muted">
-          Checkout: {provider === "stub" ? "local stub (set PAYSTACK_SECRET_KEY for Paystack)" : "Paystack"}
-        </p>
+        {checkoutEnabled ? (
+          <p className="mt-2 text-xs text-muted">
+            Checkout: {provider === "stub" ? "local stub (set PAYSTACK_SECRET_KEY for Paystack)" : "Paystack"}
+          </p>
+        ) : (
+          <p className="mt-2 text-xs text-muted">Online checkout is off — Metertron activates access after you arrange payment with us.</p>
+        )}
       </section>
 
       <section className="rounded-lg border border-line bg-surface p-5 shadow-sm">
@@ -159,14 +182,45 @@ export function BillingPanel() {
           </p>
         </div>
 
-        <button
-          type="button"
-          disabled={pending || subscribed}
-          onClick={() => void subscribe()}
-          className="mt-5 min-h-12 rounded-md bg-primary px-5 font-semibold text-on-primary disabled:opacity-60"
-        >
-          {subscribed ? "Subscribed" : pending ? "Please wait…" : "Subscribe"}
-        </button>
+        {checkoutEnabled ? (
+          <button
+            type="button"
+            disabled={pending || subscribed}
+            onClick={() => void subscribe()}
+            className="mt-5 min-h-12 rounded-md bg-primary px-5 font-semibold text-on-primary disabled:opacity-60"
+          >
+            {subscribed ? "Subscribed" : pending ? "Please wait…" : "Subscribe"}
+          </button>
+        ) : (
+          <div className="mt-5 space-y-3">
+            <p className="text-sm text-muted">
+              {subscribed
+                ? "Your organisation is on an active plan managed by Metertron."
+                : "To renew or move from trial to paid access, arrange payment with Metertron. We activate monthly or annual access from our side."}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {contact?.whatsappUrl ? (
+                <a
+                  href={contact.whatsappUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex min-h-12 items-center rounded-md bg-[#25D366] px-5 text-sm font-semibold text-white hover:brightness-105"
+                >
+                  WhatsApp {contact.whatsappName ?? "Metertron"}
+                </a>
+              ) : null}
+              {(contact?.phones ?? []).map((person) => (
+                <a
+                  key={person.tel}
+                  href={`tel:${person.tel}`}
+                  className="inline-flex min-h-12 items-center rounded-md border border-line px-5 text-sm font-semibold text-ink hover:bg-canvas"
+                >
+                  Call {person.name}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {usage ? (

@@ -541,6 +541,15 @@ export const billingEvents = pgTable("billing_events", {
   index("billing_events_kind").on(table.kind),
 ]);
 
+/** Emails that have already consumed the one free trial (blocks another self-serve trial). */
+export const trialClaims = pgTable("trial_claims", {
+  email: text("email").primaryKey(),
+  organisationId: uuid("organisation_id").references(() => organisations.id),
+  claimedAt: timestamp("claimed_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index("trial_claims_org").on(table.organisationId),
+]);
+
 /** Platform control panel — separate from tenant users. */
 export const platformStaffRole = pgEnum("platform_staff_role", ["owner", "admin", "support", "readonly"]);
 

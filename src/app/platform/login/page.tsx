@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { LogoMark, LogoWordmark } from "@/components/brand/logo";
 
 export default function PlatformLoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -19,48 +17,64 @@ export default function PlatformLoginPage() {
     event.preventDefault();
     setPending(true);
     setError("");
-    const response = await fetch("/api/platform/auth/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const body = (await response.json()) as { error?: string; needsTotpSetup?: boolean };
-    setPending(false);
-    if (!response.ok) {
-      setError(body.error ?? "Sign-in failed.");
-      return;
-    }
-    if (body.needsTotpSetup) {
-      const setup = await fetch("/api/platform/auth/totp");
-      const setupBody = (await setup.json()) as { secret?: string; otpauthUrl?: string; error?: string };
-      if (!setup.ok) {
-        setError(setupBody.error ?? "Could not start 2FA setup.");
+    try {
+      const response = await fetch("/api/platform/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const body = (await response.json().catch(() => ({}))) as { error?: string; needsTotpSetup?: boolean };
+      if (!response.ok) {
+        setError(body.error ?? "Sign-in failed.");
         return;
       }
-      setSecret(setupBody.secret ?? null);
-      setOtpauthUrl(setupBody.otpauthUrl ?? null);
-      setStep("setup");
-      return;
+      if (body.needsTotpSetup) {
+        const setup = await fetch("/api/platform/auth/totp");
+        const setupBody = (await setup.json().catch(() => ({}))) as {
+          secret?: string;
+          otpauthUrl?: string;
+          error?: string;
+        };
+        if (!setup.ok) {
+          setError(setupBody.error ?? "Could not start 2FA setup.");
+          return;
+        }
+        setSecret(setupBody.secret ?? null);
+        setOtpauthUrl(setupBody.otpauthUrl ?? null);
+        setStep("setup");
+        return;
+      }
+      setStep("verify");
+    } catch {
+      setError("Could not sign in. Check your connection and try again.");
+    } finally {
+      setPending(false);
     }
-    setStep("verify");
   }
 
   async function confirmTotp(event: React.FormEvent) {
     event.preventDefault();
     setPending(true);
     setError("");
-    const response = await fetch("/api/platform/auth/totp", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ code, action: step === "setup" ? "setup" : "verify" }),
-    });
-    const body = (await response.json()) as { error?: string };
-    setPending(false);
-    if (!response.ok) {
-      setError(body.error ?? "Invalid code.");
-      return;
+    try {
+      const response = await fetch("/api/platform/auth/totp", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ code, action: step === "setup" ? "setup" : "verify" }),
+      });
+      const body = (await response.json()) as { error?: string; ok?: boolean };
+      if (!response.ok) {
+        setPending(false);
+        setError(body.error ?? "Invalid code.");
+        return;
+      }
+      // Full reload so the console layout reads the verified session cookie.
+      // Soft navigation (router.replace) can stick on the platform loading UI.
+      window.location.assign("/platform");
+    } catch {
+      setPending(false);
+      setError("Could not verify. Check your connection and try again.");
     }
-    router.replace("/platform");
   }
 
   return (
@@ -74,7 +88,7 @@ export default function PlatformLoginPage() {
         <p className="mt-1 text-sm text-slate-400">Staff only. Two-factor authentication is required.</p>
 
         {step === "password" ? (
-          <form onSubmit={(e) => void login(e)} className="mt-6 space-y-3">
+          <form method="post" onSubmit={(e) => void login(e)} className="mt-6 space-y-3">
             <label className="block text-sm">
               Email
               <input
@@ -106,7 +120,7 @@ export default function PlatformLoginPage() {
             </button>
           </form>
         ) : (
-          <form onSubmit={(e) => void confirmTotp(e)} className="mt-6 space-y-3">
+          <form method="post" onSubmit={(e) => void confirmTotp(e)} className="mt-6 space-y-3">
             {step === "setup" ? (
               <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
                 <p className="font-semibold">Set up authenticator app</p>

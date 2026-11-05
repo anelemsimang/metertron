@@ -14,7 +14,7 @@
     "db:migrate:tenancy": "tsx --env-file=.env scripts/apply-sql.ts drizzle/0003_tenancy.sql",
     "db:migrate:tenant1": "tsx --env-file=.env scripts/migrate-tenant1.ts",
     "db:seed": "tsx --env-file=.env src/server/db/seed.ts",
-    "db:seed:demo": "tsx --env-file=.env scripts/seed-demo.ts",
+    "db:purge-tenants": "tsx --env-file=.env scripts/purge-tenant-data.ts",
     "platform:bootstrap": "tsx --env-file=.env scripts/bootstrap-platform.ts",
     "marketing:seo-check": "node --import tsx scripts/marketing-seo-check.mjs"
   },

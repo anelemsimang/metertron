@@ -21,6 +21,12 @@ type Detail = {
     supportAccessRequiresApproval: boolean;
   };
   members: Array<{ userId: string; name: string; email: string; role: string; removedAt: string | null }>;
+  subscription: {
+    status: string;
+    interval: string;
+    currentPeriodStart: string | null;
+    currentPeriodEnd: string | null;
+  } | null;
 };
 
 function PlatformOrgsInner() {
@@ -73,6 +79,7 @@ function PlatformOrgsInner() {
   async function patchOrg(patch: Record<string, unknown>) {
     if (!detail) return;
     setMessage("");
+    setError("");
     const response = await fetch("/api/platform/orgs", {
       method: "PATCH",
       headers: { "content-type": "application/json" },
@@ -84,6 +91,25 @@ function PlatformOrgsInner() {
       return;
     }
     setMessage("Organisation updated.");
+    await loadDetail(detail.organisation.id);
+    await loadList();
+  }
+
+  async function activate(interval: "monthly" | "annual") {
+    if (!detail) return;
+    setMessage("");
+    setError("");
+    const response = await fetch("/api/platform/orgs", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ organisationId: detail.organisation.id, action: "activate", interval }),
+    });
+    const body = (await response.json()) as { error?: string };
+    if (!response.ok) {
+      setError(body.error ?? "Could not activate organisation.");
+      return;
+    }
+    setMessage(interval === "annual" ? "Activated for 1 year." : "Activated for 1 month.");
     await loadDetail(detail.organisation.id);
     await loadList();
   }
@@ -124,7 +150,9 @@ function PlatformOrgsInner() {
     <div className="space-y-5">
       <div>
         <h1 className="text-xl font-semibold">Organisations</h1>
-        <p className="mt-1 text-sm text-slate-400">Search tenants, change status, and start audited support access.</p>
+        <p className="mt-1 text-sm text-slate-400">
+          Search tenants, activate monthly or annual access after private payment, and start audited support access.
+        </p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
@@ -182,8 +210,42 @@ function PlatformOrgsInner() {
                   <dt className="text-slate-500">Legal name</dt>
                   <dd>{detail.organisation.legalName}</dd>
                 </div>
+                <div>
+                  <dt className="text-slate-500">Subscription</dt>
+                  <dd className="capitalize">
+                    {detail.subscription
+                      ? `${detail.subscription.status} · ${detail.subscription.interval}`
+                      : "None"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Period ends</dt>
+                  <dd>
+                    {detail.subscription?.currentPeriodEnd
+                      ? new Date(detail.subscription.currentPeriodEnd).toLocaleDateString("en-ZA")
+                      : detail.organisation.trialEndsAt
+                        ? `Trial ${new Date(detail.organisation.trialEndsAt).toLocaleDateString("en-ZA")}`
+                        : "—"}
+                  </dd>
+                </div>
               </dl>
               <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => void activate("monthly")}
+                  className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+                >
+                  Activate monthly (1 month)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void activate("annual")}
+                  className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+                >
+                  Activate annual (1 year)
+                </button>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
                 {(["active", "trialing", "past_due", "readonly", "suspended"] as const).map((status) => (
                   <button
                     key={status}

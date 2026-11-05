@@ -233,7 +233,7 @@ export const SOLUTIONS: SolutionPage[] = [
       },
       {
         q: "Can we get read-only visibility?",
-        a: "Programme oversight is typically via contractor exports and reports. Direct municipal tenants may be arranged for larger programmes — contact hello@metertron.co.za.",
+        a: "Programme oversight is typically via contractor exports and reports. Direct municipal tenants may be arranged for larger programmes — WhatsApp or call us via /contact.",
       },
       {
         q: "What about eThekwini-style layouts?",

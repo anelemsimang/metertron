@@ -18,10 +18,17 @@ export type PlatformStaffSession = {
 };
 
 function cookieOptions(maxAge = TWELVE_HOURS) {
+  // Prefer HTTPS detection over NODE_ENV — preview/proxy hosts still need Secure cookies
+  // when served over https, and local http must remain non-Secure.
+  const secure =
+    process.env.NODE_ENV === "production" ||
+    process.env.URL?.startsWith("https://") === true ||
+    process.env.DEPLOY_URL?.startsWith("https://") === true ||
+    process.env.NEXT_PUBLIC_SITE_URL?.startsWith("https://") === true;
   return {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure,
     path: "/",
     maxAge,
   };
@@ -56,12 +63,16 @@ export async function markPlatformTotpVerified() {
   const store = await cookies();
   const token = store.get(PLATFORM_SESSION_COOKIE)?.value;
   if (!token) return false;
-  await withBypassRls(async () => {
-    await getDb()
+  const updated = await withBypassRls(async () => {
+    return getDb()
       .update(platformSessions)
       .set({ totpVerifiedAt: new Date(), updatedAt: new Date() })
-      .where(eq(platformSessions.token, token));
+      .where(and(eq(platformSessions.token, token), gt(platformSessions.expiresAt, new Date())))
+      .returning({ id: platformSessions.id });
   });
+  if (!updated.length) return false;
+  // Re-emit the cookie on the TOTP response so the following full navigation includes it.
+  store.set(PLATFORM_SESSION_COOKIE, token, cookieOptions());
   return true;
 }
 

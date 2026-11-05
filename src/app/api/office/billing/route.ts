@@ -1,11 +1,13 @@
 import { annualFromMonthly, vatFromExclusive } from "@/server/billing/vat";
 import { advanceDunning } from "@/server/billing/dunning";
+import { isBillingCheckoutEnabled } from "@/server/billing/flags";
 import { METERTRON_PLAN_KEY } from "@/server/billing/plans";
 import { getBillingProvider } from "@/server/billing/provider";
 import { createSubscriptionInvoice, getBillingOverview, markInvoicePaid } from "@/server/billing/subscriptions";
 import { refreshUsage } from "@/server/billing/usage";
 import { requireCapability } from "@/server/auth/require-admin";
 import { safeDbMessage, withOrg } from "@/server/db/client";
+import { SITE } from "@/lib/marketing/site";
 
 export async function GET() {
   const gate = await requireCapability("manage_billing");
@@ -17,7 +19,17 @@ export async function GET() {
         getBillingOverview(gate.user.organisationId),
         refreshUsage(gate.user.organisationId),
       ]);
-      return Response.json({ overview, usage, provider: getBillingProvider().name });
+      return Response.json({
+        overview,
+        usage,
+        provider: getBillingProvider().name,
+        checkoutEnabled: isBillingCheckoutEnabled(),
+        contact: {
+          whatsappUrl: SITE.whatsappUrl || null,
+          whatsappName: SITE.whatsappName,
+          phones: SITE.phones.map((p) => ({ name: p.name, display: p.display, tel: p.tel })),
+        },
+      });
     });
   } catch (error) {
     return Response.json({ error: safeDbMessage(error) }, { status: 500 });
@@ -34,6 +46,9 @@ export async function POST(request: Request) {
   try {
     return await withOrg(gate.user.organisationId, async () => {
       if (action === "verify") {
+        if (!isBillingCheckoutEnabled()) {
+          return Response.json({ error: "Online checkout is not available. Contact Metertron to renew." }, { status: 403 });
+        }
         const reference = typeof body.reference === "string" ? body.reference : "";
         if (!reference) return Response.json({ error: "Missing payment reference." }, { status: 400 });
         const provider = getBillingProvider();
@@ -41,6 +56,15 @@ export async function POST(request: Request) {
         if (!verified.paid) return Response.json({ error: "Payment not completed." }, { status: 402 });
         await markInvoicePaid(gate.user.organisationId, reference, interval);
         return Response.json({ ok: true });
+      }
+
+      if (!isBillingCheckoutEnabled()) {
+        return Response.json(
+          {
+            error: "Online checkout is paused. WhatsApp or call Metertron to arrange monthly or annual access.",
+          },
+          { status: 403 },
+        );
       }
 
       const overview = await getBillingOverview(gate.user.organisationId);

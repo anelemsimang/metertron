@@ -5,6 +5,7 @@ import { CookieBanner } from "@/components/marketing/cookie-banner";
 import { JsonLd } from "@/components/marketing/json-ld";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
+import { WhatsappWidget } from "@/components/marketing/whatsapp-widget";
 import { organizationJsonLd, websiteJsonLd } from "@/lib/marketing/seo";
 
 export default function MarketingLayout({ children }: { children: ReactNode }) {
@@ -23,6 +24,7 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
       </div>
       <div id="main">{children}</div>
       <SiteFooter />
+      <WhatsappWidget />
       <CookieBanner />
       <MarketingAnalytics />
     </div>

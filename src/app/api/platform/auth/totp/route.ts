@@ -53,7 +53,10 @@ export async function POST(request: Request) {
       });
     }
 
-    await markPlatformTotpVerified();
+    const verified = await markPlatformTotpVerified();
+    if (!verified) {
+      return Response.json({ error: "Session expired. Sign in again, then enter your code." }, { status: 401 });
+    }
     await writePlatformAudit({
       staffId: staff.id,
       action: action === "setup" ? "platform.totp.setup" : "platform.totp.verify",

@@ -1,11 +1,11 @@
 "use client";
 
-import { useId, useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent, Suspense } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AppLoading } from "@/components/brand/app-loading";
 import { LogoLockup } from "@/components/brand/logo";
 import { BRAND, STORAGE } from "@/lib/brand";
-import { Suspense } from "react";
 
 function LoginForm() {
   const params = useSearchParams();
@@ -70,9 +70,11 @@ function LoginForm() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-canvas px-4 py-10 text-ink">
-      <form onSubmit={submit} className="w-full max-w-md rounded-lg border border-line bg-surface p-6 shadow-md">
+      <form method="post" onSubmit={submit} className="w-full max-w-md rounded-lg border border-line bg-surface p-6 shadow-md">
         <div>
-          <LogoLockup />
+          <Link href="/" className="inline-flex rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--mt-leaf)]">
+            <LogoLockup />
+          </Link>
           <p className="mt-2 text-sm text-muted">{BRAND.tagline}</p>
         </div>
         <div className="mt-6 grid grid-cols-2 rounded-md bg-canvas p-1 text-sm font-semibold">

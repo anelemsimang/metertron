@@ -27,10 +27,11 @@ cp .env.example .env
 npm install
 npx tsx --env-file=.env scripts/apply-sql.ts drizzle/0000_init.sql
 # …apply remaining drizzle/*.sql in order, or use your existing DB
-npm run db:seed:demo   # optional demo owner
 npm run platform:bootstrap  # optional platform owner
 npm run dev
 ```
+
+Organisations are created on signup (trial). Do not seed mock tenants into shared databases.
 
 ## Scripts
 
@@ -39,8 +40,8 @@ npm run dev
 | `npm run dev` | Next.js (Turbopack) |
 | `npm test` | Unit tests |
 | `npm run lint` | ESLint |
-| `npm run db:seed:demo` | Demo organisation + owner |
 | `npm run platform:bootstrap` | First platform staff owner |
+| `npm run db:purge-tenants` | Wipe all organisations + tenant data (keeps platform staff) |
 | `node scripts/render-brand-icons.mjs` | Regenerate brand assets |
 
 ## Docs

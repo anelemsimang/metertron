@@ -146,6 +146,55 @@ export async function createSubscriptionInvoice(
   return { invoice, plan, display: formatZarFromCents(taxed.totalZarCents) };
 }
 
+/**
+ * Manual activation from the platform console (private payment arrangements).
+ * Sets org + subscription active for one month or one year from now.
+ */
+export async function activateOrganisationAccess(
+  organisationId: string,
+  interval: "monthly" | "annual",
+) {
+  const db = getDb();
+  await ensureMetertronPlan();
+  const periodEnd = new Date();
+  periodEnd.setMonth(periodEnd.getMonth() + (interval === "annual" ? 12 : 1));
+  const periodStart = new Date();
+
+  const [existing] = await db
+    .select({ id: organisationSubscriptions.id })
+    .from(organisationSubscriptions)
+    .where(eq(organisationSubscriptions.organisationId, organisationId))
+    .limit(1);
+
+  if (existing) {
+    await db
+      .update(organisationSubscriptions)
+      .set({
+        planKey: METERTRON_PLAN_KEY,
+        interval,
+        status: "active",
+        currentPeriodStart: periodStart,
+        currentPeriodEnd: periodEnd,
+        graceEndsAt: null,
+        cancelledAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(organisationSubscriptions.organisationId, organisationId));
+  } else {
+    await db.insert(organisationSubscriptions).values({
+      organisationId,
+      planKey: METERTRON_PLAN_KEY,
+      interval,
+      status: "active",
+      currentPeriodStart: periodStart,
+      currentPeriodEnd: periodEnd,
+    });
+  }
+
+  await recoverOrganisation(organisationId, METERTRON_PLAN_KEY);
+  return { interval, currentPeriodStart: periodStart, currentPeriodEnd: periodEnd };
+}
+
 export async function markInvoicePaid(organisationId: string, reference: string, interval: "monthly" | "annual") {
   const db = getDb();
   const [invoice] = await db

@@ -63,7 +63,7 @@ export function DemoForm({ redirectThanks = true }: DemoFormProps) {
   if (status === "success") {
     return (
       <div className={mkFormSuccessClass}>
-        Thank you — we will be in touch shortly. You can also email hello@metertron.co.za.
+        Thank you — we will be in touch shortly. You can also WhatsApp or call us via /contact.
       </div>
     );
   }

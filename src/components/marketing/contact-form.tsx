@@ -45,7 +45,7 @@ export function ContactForm() {
       form.reset();
     } catch {
       setStatus("error");
-      setError("Network error. Try again or email us directly.");
+      setError("Network error. Try again, or WhatsApp / call us via /contact.");
     }
   }
 

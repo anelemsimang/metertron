@@ -24,6 +24,30 @@ async function roleBypassesRls() {
   return Boolean(row && (row as { bypass?: boolean }).bypass);
 }
 
+async function cleanupOrgs(orgIds: string[]) {
+  if (!orgIds.length) return;
+  await withBypassRls(async () => {
+    const db = getDb();
+    for (const id of orgIds) {
+      await db.execute(sql`delete from job_photos where organisation_id = ${id}`);
+      await db.execute(sql`delete from job_faults where organisation_id = ${id}`);
+      await db.execute(sql`delete from quality_flags where organisation_id = ${id}`);
+      await db.execute(sql`delete from jobs where organisation_id = ${id}`);
+      await db.execute(sql`delete from form_versions where organisation_id = ${id}`);
+      await db.execute(sql`delete from contracts where organisation_id = ${id}`);
+      await db.execute(sql`delete from organisation_memberships where organisation_id = ${id}`);
+      await db.execute(sql`delete from sessions where organisation_id = ${id}`);
+      await db.execute(sql`
+        delete from auth_tokens
+        where user_id in (select id from users where organisation_id = ${id})
+      `);
+      await db.execute(sql`delete from sessions where user_id in (select id from users where organisation_id = ${id})`);
+      await db.execute(sql`delete from users where organisation_id = ${id}`);
+      await db.execute(sql`delete from organisations where id = ${id}`);
+    }
+  });
+}
+
 async function seedPair() {
   return withBypassRls(async () => {
     const db = getDb();
@@ -102,36 +126,40 @@ async function seedPair() {
 
 if (!skipWithoutDb()) {
   test("photo sync refuses another organisation's job key", async () => {
-    const { orgB, userB, jobA } = await seedPair();
-    const actor: SessionUser = {
-      id: userB.id,
-      name: userB.name,
-      username: userB.username,
-      email: userB.email,
-      organisationId: orgB.id,
-      organisationName: "Org B",
-      organisationSlug: "org-b",
-      onboardingCompleted: true,
-      orgRole: "member",
-      membershipRole: "technician",
-      emailVerified: true,
-      totpEnabled: false,
-    };
-    const result = await acceptSyncedPhoto(
-      {
-        idempotencyKey: `photo-x-${Date.now()}`,
-        jobKey: jobA.idempotencyKey!,
-        fieldId: "photoNewMeter",
-        bytes: Buffer.from("fake-jpeg"),
-        capturedAt: null,
-        latitude: null,
-        longitude: null,
-        accuracy: null,
-        altitude: null,
-      },
-      actor,
-    );
-    assert.deepEqual(result, { error: "job-missing" });
+    const pair = await seedPair();
+    try {
+      const actor: SessionUser = {
+        id: pair.userB.id,
+        name: pair.userB.name,
+        username: pair.userB.username,
+        email: pair.userB.email,
+        organisationId: pair.orgB.id,
+        organisationName: "Org B",
+        organisationSlug: "org-b",
+        onboardingCompleted: true,
+        orgRole: "member",
+        membershipRole: "technician",
+        emailVerified: true,
+        totpEnabled: false,
+      };
+      const result = await acceptSyncedPhoto(
+        {
+          idempotencyKey: `photo-x-${Date.now()}`,
+          jobKey: pair.jobA.idempotencyKey!,
+          fieldId: "photoNewMeter",
+          bytes: Buffer.from("fake-jpeg"),
+          capturedAt: null,
+          latitude: null,
+          longitude: null,
+          accuracy: null,
+          altitude: null,
+        },
+        actor,
+      );
+      assert.deepEqual(result, { error: "job-missing" });
+    } finally {
+      await cleanupOrgs([pair.orgA.id, pair.orgB.id]);
+    }
   });
 
   test("RLS: org B cannot read org A jobs via withOrg", async (t) => {
@@ -139,17 +167,21 @@ if (!skipWithoutDb()) {
       t.skip("DB role is superuser / BYPASSRLS — use a NOBYPASSRLS app role to enforce RLS");
       return;
     }
-    const { orgA, orgB, jobA } = await seedPair();
-    const visibleToA = await withOrg(orgA.id, async () => {
-      const [row] = await getDb().select({ id: jobs.id }).from(jobs).where(eq(jobs.id, jobA.id)).limit(1);
-      return row?.id ?? null;
-    });
-    const visibleToB = await withOrg(orgB.id, async () => {
-      const [row] = await getDb().select({ id: jobs.id }).from(jobs).where(eq(jobs.id, jobA.id)).limit(1);
-      return row?.id ?? null;
-    });
-    assert.equal(visibleToA, jobA.id);
-    assert.equal(visibleToB, null);
+    const pair = await seedPair();
+    try {
+      const visibleToA = await withOrg(pair.orgA.id, async () => {
+        const [row] = await getDb().select({ id: jobs.id }).from(jobs).where(eq(jobs.id, pair.jobA.id)).limit(1);
+        return row?.id ?? null;
+      });
+      const visibleToB = await withOrg(pair.orgB.id, async () => {
+        const [row] = await getDb().select({ id: jobs.id }).from(jobs).where(eq(jobs.id, pair.jobA.id)).limit(1);
+        return row?.id ?? null;
+      });
+      assert.equal(visibleToA, pair.jobA.id);
+      assert.equal(visibleToB, null);
+    } finally {
+      await cleanupOrgs([pair.orgA.id, pair.orgB.id]);
+    }
   });
 
   test("withOrg cannot update another tenant's job by id", async (t) => {
@@ -157,16 +189,19 @@ if (!skipWithoutDb()) {
       t.skip("DB role is superuser / BYPASSRLS — use a NOBYPASSRLS app role to enforce RLS");
       return;
     }
-    const { orgB, jobA } = await seedPair();
-    const updated = await withOrg(orgB.id, async () => {
-      return getDb()
-        .update(jobs)
-        .set({ rejectionMessage: "leak", updatedAt: new Date() })
-        .where(eq(jobs.id, jobA.id))
-        .returning({ id: jobs.id });
-    });
-    assert.equal(updated.length, 0);
+    const pair = await seedPair();
+    try {
+      const updated = await withOrg(pair.orgB.id, async () => {
+        return getDb()
+          .update(jobs)
+          .set({ rejectionMessage: "leak", updatedAt: new Date() })
+          .where(eq(jobs.id, pair.jobA.id))
+          .returning({ id: jobs.id });
+      });
+      assert.equal(updated.length, 0);
+    } finally {
+      await cleanupOrgs([pair.orgA.id, pair.orgB.id]);
+    }
   });
-
 }
 

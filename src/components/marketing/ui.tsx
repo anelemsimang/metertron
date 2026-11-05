@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { JsonLd } from "@/components/marketing/json-ld";
+import { WhatsappCta } from "@/components/marketing/whatsapp-widget";
 import { breadcrumbJsonLd, faqJsonLd } from "@/lib/marketing/seo";
+import { PRICING } from "@/lib/marketing/pricing";
 
 export function MkContainer({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <div className={`mk-container ${className}`}>{children}</div>;
@@ -64,22 +66,25 @@ export function CtaPrimary({ href = "/login", children = "Start free trial" }: {
   );
 }
 
-export function CtaSecondary({ href = "/demo", children = "Book a demo", light = false }: { href?: string; children?: ReactNode; light?: boolean }) {
-  return (
-    <Link
-      href={href}
-      className={`inline-flex min-h-12 items-center justify-center rounded-md border px-5 text-sm font-semibold ${
-        light ? "border-white/30 text-white hover:bg-white/10" : "border-line text-[var(--mt-grove)] hover:bg-[var(--mt-mist)]"
-      }`}
-    >
-      {children}
-    </Link>
-  );
+export function CtaSecondary({ href, children = "Chat on WhatsApp", light = false }: { href?: string; children?: ReactNode; light?: boolean }) {
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={`inline-flex min-h-12 items-center justify-center rounded-md border px-5 text-sm font-semibold ${
+          light ? "border-white/30 text-white hover:bg-white/10" : "border-line text-[var(--mt-grove)] hover:bg-[var(--mt-mist)]"
+        }`}
+      >
+        {children}
+      </Link>
+    );
+  }
+  return <WhatsappCta light={light}>{children}</WhatsappCta>;
 }
 
 export function CtaBand({
   title = "Ready to account for every meter?",
-  body = "Start a 7-day trial — full product access for your organisation. No card required to begin.",
+  body = `Start a ${PRICING.trialDays}-day free trial — or WhatsApp us to arrange monthly or annual access for your organisation.`,
 }: {
   title?: string;
   body?: string;

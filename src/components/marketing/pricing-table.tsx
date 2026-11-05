@@ -14,8 +14,12 @@ const faqs = [
     a: "No. One Metertron subscription per organisation includes full product access. We do not sell seat tiers.",
   },
   {
+    q: "How do I pay?",
+    a: "Paid access is arranged with us directly (WhatsApp or phone) — monthly or annual. There is no card checkout on the site for now.",
+  },
+  {
     q: "How long is the trial?",
-    a: `Every new organisation gets a ${PRICING.trialDays}-day trial with full access. No card is required to start.`,
+    a: `Every new organisation gets one ${PRICING.trialDays}-day trial with full access. No card is required. The free trial can only be used once per email.`,
   },
   {
     q: "Does annual billing discount two months?",
@@ -63,7 +67,11 @@ export function PricingTable() {
             : `Or ${formatZar(PRICING.annualZarCents)} / year excl. VAT`}
         </p>
         <p className="mt-3 text-sm font-semibold text-[var(--mt-leaf)]">
-          {PRICING.trialDays}-day trial · no card required to start
+          {PRICING.trialDays}-day free trial · paid access arranged with us
+        </p>
+        <p className="mt-2 text-sm text-muted">
+          Start a trial online anytime. For monthly or annual access after the trial, WhatsApp us — we activate your
+          organisation from our control panel.
         </p>
         <ul className="mt-8 space-y-2 text-sm text-[var(--mt-slate-700)]">
           {PRICING.features.map((feature) => (
@@ -77,7 +85,7 @@ export function PricingTable() {
         </ul>
         <div className="mt-8 flex flex-wrap gap-3">
           <CtaPrimary />
-          <CtaSecondary />
+          <CtaSecondary>WhatsApp to arrange access</CtaSecondary>
         </div>
       </div>
 

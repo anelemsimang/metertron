@@ -3,6 +3,7 @@ import { getDb, withBypassRls } from "@/server/db/client";
 import {
   invoices,
   organisationMemberships,
+  organisationSubscriptions,
   organisations,
   platformAuditEvents,
   platformStaff,
@@ -125,6 +126,16 @@ export async function getOrganisationDetail(organisationId: string) {
       .innerJoin(users, eq(organisationMemberships.userId, users.id))
       .where(eq(organisationMemberships.organisationId, organisationId))
       .limit(100);
-    return { organisation: org, members };
+    const [subscription] = await db
+      .select({
+        status: organisationSubscriptions.status,
+        interval: organisationSubscriptions.interval,
+        currentPeriodStart: organisationSubscriptions.currentPeriodStart,
+        currentPeriodEnd: organisationSubscriptions.currentPeriodEnd,
+      })
+      .from(organisationSubscriptions)
+      .where(eq(organisationSubscriptions.organisationId, organisationId))
+      .limit(1);
+    return { organisation: org, members, subscription: subscription ?? null };
   });
 }

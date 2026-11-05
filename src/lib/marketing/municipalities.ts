@@ -18,7 +18,7 @@ export const MUNICIPALITIES: MunicipalityPage[] = [
     body: [
       "eThekwini water meter programmes typically require structured Excel submissions with fixed headers, meter identifiers, and status values that match the municipality’s intake process. Contractors who capture cleanly in the field still lose days when office staff re-type columns by hand.",
       "Metertron ships an eThekwini-oriented export template as a starting point your organisation can clone and adjust. Field forms collect the facts once; review locks quality; export maps answers into the sheet the client expects.",
-      "If you run routes in eThekwini and need template alignment reviewed against your current contract pack, contact hello@metertron.co.za with a redacted sample header row — not customer PII.",
+      "If you run routes in eThekwini and need template alignment reviewed against your current contract pack, WhatsApp or call us with a redacted sample header row — not customer PII.",
     ],
   },
   {

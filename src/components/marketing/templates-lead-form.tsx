@@ -65,7 +65,7 @@ export function TemplatesLeadForm() {
   if (status === "success") {
     return (
       <div className={mkFormSuccessClass}>
-        Thanks — check your email for the download link. If nothing arrives, contact hello@metertron.co.za.
+        Thanks — check your email for the download link. If nothing arrives, WhatsApp or call us via /contact.
       </div>
     );
   }

@@ -33,10 +33,10 @@ export default function CareersPage() {
           </ul>
           <h2 className="mt-12 font-[family-name:var(--font-display)] text-2xl text-[var(--mt-grove)]">Open roles</h2>
           <p className="mt-4 rounded-xl border border-line bg-white p-5 text-muted">
-            No open roles right now. Send a short note and CV to{" "}
-            <a href="mailto:hello@metertron.co.za" className="text-[var(--mt-leaf-deep)] hover:underline">
-              hello@metertron.co.za
-            </a>{" "}
+            No open roles right now.{" "}
+            <Link href="/contact" className="text-[var(--mt-leaf-deep)] hover:underline">
+              Call or WhatsApp us
+            </Link>{" "}
             if you want to be considered for engineering, customer success or field operations roles.
           </p>
           <p className="mt-8 text-sm">

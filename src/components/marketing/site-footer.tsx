@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { LogoMark, LogoWordmark } from "@/components/brand/logo";
-import { NewsletterSignup } from "@/components/marketing/newsletter-signup";
 import { SITE } from "@/lib/marketing/site";
 
 const columns = [
@@ -12,6 +11,7 @@ const columns = [
       { href: "/features/field-capture-app", label: "Field capture" },
       { href: "/security", label: "Security" },
       { href: "/demo", label: "Book a demo" },
+      { href: "/contact", label: "Contact" },
     ],
   },
   {
@@ -63,8 +63,22 @@ export function SiteFooter() {
             <LogoWordmark className="text-white" />
           </Link>
           <p className="mt-4 max-w-xs text-sm text-white/70">{SITE.tagline}</p>
-          <p className="mt-3 text-sm text-white/55">{SITE.email}</p>
-          <NewsletterSignup variant="footer" />
+          <ul className="mt-4 space-y-1.5 text-sm text-white/70">
+            {SITE.phones.map((person) => (
+              <li key={person.tel}>
+                <a className="hover:text-white" href={`tel:${person.tel}`}>
+                  {person.name} · {person.display}
+                </a>
+              </li>
+            ))}
+          </ul>
+          {SITE.whatsappUrl ? (
+            <p className="mt-3 text-sm">
+              <a className="text-[#25D366] hover:brightness-110" href={SITE.whatsappUrl} target="_blank" rel="noreferrer">
+                WhatsApp {SITE.whatsappName}
+              </a>
+            </p>
+          ) : null}
         </div>
         {columns.map((column) => (
           <div key={column.title}>

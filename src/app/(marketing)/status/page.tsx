@@ -44,10 +44,10 @@ export default function StatusPage() {
                 All systems operational
               </p>
               <p className="mt-3 text-sm text-muted">
-                If you are seeing an outage, contact{" "}
-                <a href="mailto:support@metertron.co.za" className="text-[var(--mt-leaf-deep)] hover:underline">
-                  support@metertron.co.za
-                </a>
+                If you are seeing an outage,{" "}
+                <Link href="/contact" className="text-[var(--mt-leaf-deep)] hover:underline">
+                  call or WhatsApp us
+                </Link>
                 .
               </p>
             </>

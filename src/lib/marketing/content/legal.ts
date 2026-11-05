@@ -57,7 +57,7 @@ export const LEGAL_PAGES: LegalPage[] = [
       {
         heading: "Governing law",
         paragraphs: [
-          "These draft terms are intended to be governed by the laws of the Republic of South Africa. Disputes should first be raised with hello@metertron.co.za so we can attempt resolution in good faith.",
+          "These draft terms are intended to be governed by the laws of the Republic of South Africa. Disputes should first be raised by calling or WhatsApping us via metertron.co.za/contact so we can attempt resolution in good faith.",
         ],
       },
     ],
@@ -101,7 +101,7 @@ export const LEGAL_PAGES: LegalPage[] = [
         heading: "Your rights",
         paragraphs: [
           "Under POPIA you may request access, correction, or deletion of personal information we hold about you as an account holder. Job-level data about third parties should be directed to the contractor organisation that captured it.",
-          "Contact hello@metertron.co.za for privacy queries. You may lodge a complaint with the Information Regulator if unresolved.",
+          "Contact us by phone or WhatsApp via metertron.co.za/contact for privacy queries. You may lodge a complaint with the Information Regulator if unresolved.",
         ],
       },
     ],
@@ -170,7 +170,7 @@ export const LEGAL_PAGES: LegalPage[] = [
       {
         heading: "Requests",
         paragraphs: [
-          "Formal PAIA requests should be sent to hello@metertron.co.za with sufficient detail to identify the record. We will respond within statutory timeframes where the request relates to records we control directly.",
+          "Formal PAIA requests should be raised by calling or WhatsApping us via metertron.co.za/contact with sufficient detail to identify the record. We will respond within statutory timeframes where the request relates to records we control directly.",
           "Requests for job or customer records captured by a contractor organisation may need to be directed to that organisation as the responsible party.",
         ],
       },
@@ -206,7 +206,7 @@ export const LEGAL_PAGES: LegalPage[] = [
         heading: "Your choices",
         paragraphs: [
           "You can clear cookies via browser settings. Session cookies expire when you log out or after the configured lifetime.",
-          "For questions, contact hello@metertron.co.za.",
+          "For questions, call or WhatsApp us via metertron.co.za/contact.",
         ],
       },
     ],
@@ -291,7 +291,7 @@ export const LEGAL_PAGES: LegalPage[] = [
       {
         heading: "Enforcement",
         paragraphs: [
-          "We may warn, suspend, or terminate access for AUP violations. Report abuse to hello@metertron.co.za.",
+          "We may warn, suspend, or terminate access for AUP violations. Report abuse by calling or WhatsApping us via metertron.co.za/contact.",
         ],
       },
     ],

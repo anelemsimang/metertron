@@ -1,15 +1,20 @@
 /**
  * Capture clean office/field screenshots for the marketing site.
  * Usage: node scripts/capture-marketing-shots.mjs
- * Requires local server on :3000 and demo user (npm run db:seed:demo).
+ * Requires local server on :3000 and a real signed-up account
+ * (set DEMO_EMAIL / DEMO_PASSWORD to that account — no mock seed).
  */
 import fs from "node:fs";
 import path from "node:path";
 import puppeteer from "puppeteer-core";
 
 const BASE = process.env.SHOT_BASE_URL ?? "http://127.0.0.1:3000";
-const EMAIL = process.env.DEMO_EMAIL ?? "demo@metertron.local";
-const PASSWORD = process.env.DEMO_PASSWORD ?? "demo-password-change-me";
+const EMAIL = process.env.DEMO_EMAIL;
+const PASSWORD = process.env.DEMO_PASSWORD;
+if (!EMAIL || !PASSWORD) {
+  console.error("Set DEMO_EMAIL and DEMO_PASSWORD to a real account before capturing shots.");
+  process.exit(1);
+}
 const OUT = path.resolve("public/images/marketing/screenshots");
 const CHROME =
   process.env.CHROME_PATH ??

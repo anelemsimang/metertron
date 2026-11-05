@@ -5,6 +5,8 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { AppLoading } from "@/components/brand/app-loading";
 
 const MIN_MS = 280;
+/** Never leave the full-screen overlay up forever (e.g. cancelled / raced navigations). */
+const MAX_MS = 2500;
 
 function isAppNavigation(anchor: HTMLAnchorElement) {
   if (anchor.target && anchor.target !== "_self") return false;
@@ -29,20 +31,38 @@ export function NavigationLoading() {
   const [visible, setVisible] = useState(false);
   const shownAt = useRef(0);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const maxTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const routeKey = `${pathname}?${searchParams.toString()}`;
 
-  function show() {
+  function clearTimers() {
     if (hideTimer.current) {
       clearTimeout(hideTimer.current);
       hideTimer.current = null;
     }
+    if (maxTimer.current) {
+      clearTimeout(maxTimer.current);
+      maxTimer.current = null;
+    }
+  }
+
+  function show() {
+    clearTimers();
     shownAt.current = Date.now();
     setVisible(true);
+    maxTimer.current = setTimeout(() => {
+      setVisible(false);
+      maxTimer.current = null;
+    }, MAX_MS);
   }
 
   function hide() {
+    if (maxTimer.current) {
+      clearTimeout(maxTimer.current);
+      maxTimer.current = null;
+    }
     const elapsed = Date.now() - shownAt.current;
     const wait = Math.max(0, MIN_MS - elapsed);
+    if (hideTimer.current) clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => {
       setVisible(false);
       hideTimer.current = null;
@@ -51,7 +71,6 @@ export function NavigationLoading() {
 
   useEffect(() => {
     hide();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the route identity changes
   }, [routeKey]);
 
   useEffect(() => {
@@ -65,12 +84,16 @@ export function NavigationLoading() {
     }
 
     function onSubmit(event: SubmitEvent) {
+      // Capture phase runs before React preventDefault. Only show for real
+      // navigational GET submits — never for fetch/XHR login forms.
       const form = event.target as HTMLFormElement | null;
       if (!form) return;
       const method = (form.getAttribute("method") || "get").toLowerCase();
       if (method !== "get") return;
+      if (form.getAttribute("action") === "#" || form.dataset.noNavLoading === "true") return;
       const action = form.getAttribute("action");
-      if (action?.startsWith("http") && !action.startsWith(window.location.origin)) return;
+      if (!action || action === "" || action.startsWith("?")) return;
+      if (action.startsWith("http") && !action.startsWith(window.location.origin)) return;
       show();
     }
 
@@ -97,16 +120,16 @@ export function NavigationLoading() {
       return replaceState(data, unused, url);
     };
 
+    // Do not show on popstate (browser back/forward). Next often updates the
+    // route before popstate fires, so show()-after-hide leaves the overlay stuck.
     document.addEventListener("click", onPointerDown, true);
     document.addEventListener("submit", onSubmit, true);
-    window.addEventListener("popstate", show);
     return () => {
       history.pushState = pushState;
       history.replaceState = replaceState;
       document.removeEventListener("click", onPointerDown, true);
       document.removeEventListener("submit", onSubmit, true);
-      window.removeEventListener("popstate", show);
-      if (hideTimer.current) clearTimeout(hideTimer.current);
+      clearTimers();
     };
   }, []);
 

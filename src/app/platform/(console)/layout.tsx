@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { PlatformShell } from "@/components/platform/platform-shell";
 import { getPlatformStaff } from "@/server/platform/session";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Metertron Platform",
   robots: { index: false, follow: false },

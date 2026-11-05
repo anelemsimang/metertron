@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { TemplatesLeadForm } from "@/components/marketing/templates-lead-form";
-import { Breadcrumbs, MkContainer, MkH1, MkLead, MkSection } from "@/components/marketing/ui";
+import { WhatsappCta } from "@/components/marketing/whatsapp-widget";
+import { Breadcrumbs, CtaPrimary, MkContainer, MkH1, MkLead, MkSection } from "@/components/marketing/ui";
 import { pageMetadata } from "@/lib/marketing/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -31,7 +31,7 @@ export default function TemplatesResourcePage() {
           <ul className="mt-8 space-y-3 text-sm text-muted">
             <li>Checklist covers serials, seals, photos, GPS and commissioning notes</li>
             <li>Export file is headers only — no fabricated install rows</li>
-            <li>Files download after you confirm POPIA consent</li>
+            <li>Questions about your municipal layout? WhatsApp us</li>
           </ul>
           <p className="mt-8 text-sm">
             <Link href="/guides/meter-installation-programme-guide" className="text-[var(--mt-leaf-deep)] hover:underline">
@@ -48,7 +48,31 @@ export default function TemplatesResourcePage() {
           </p>
         </div>
         <div className="rounded-xl border border-line bg-white p-6 md:p-8">
-          <TemplatesLeadForm />
+          <p className="text-sm font-semibold text-[var(--mt-grove)]">Downloads</p>
+          <ul className="mt-4 space-y-3 text-sm">
+            <li>
+              <a
+                className="font-semibold text-[var(--mt-leaf-deep)] hover:underline"
+                href="/downloads/meter-installation-checklist.md"
+                download
+              >
+                Meter installation checklist
+              </a>
+            </li>
+            <li>
+              <a
+                className="font-semibold text-[var(--mt-leaf-deep)] hover:underline"
+                href="/downloads/blank-municipal-export-headers.csv"
+                download
+              >
+                Blank municipal export headers (CSV)
+              </a>
+            </li>
+          </ul>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <WhatsappCta>WhatsApp about templates</WhatsappCta>
+            <CtaPrimary />
+          </div>
         </div>
       </MkContainer>
     </MkSection>

@@ -5,6 +5,7 @@ import { issueAuthToken } from "@/server/auth/tokens";
 import { getDb, safeDbMessage, withBypassRls } from "@/server/db/client";
 import { organisationMemberships, users } from "@/server/db/schema";
 import { ensureTrialSubscription } from "@/server/billing/subscriptions";
+import { hasUsedFreeTrial, recordFreeTrialClaim } from "@/server/billing/trial-claims";
 import { createOrganisation } from "@/server/orgs/create";
 
 function clean(value: unknown) {
@@ -39,6 +40,15 @@ export async function POST(request: Request) {
     });
     if (existing) return Response.json({ error: "An account with that email already exists." }, { status: 409 });
 
+    if (await hasUsedFreeTrial(email)) {
+      return Response.json(
+        {
+          error: "This email has already used the free trial. WhatsApp or call us to arrange paid access.",
+        },
+        { status: 403 },
+      );
+    }
+
     const organisation = await createOrganisation({ name: companyName });
     const passwordHash = await hashPassword(password);
     const created = await withBypassRls(async () => {
@@ -70,6 +80,7 @@ export async function POST(request: Request) {
     });
 
     await ensureTrialSubscription(organisation.id);
+    await recordFreeTrialClaim(email, organisation.id);
     const verify = await issueAuthToken({ kind: "email_verify", email, userId: created.id, ttlHours: 48 });
     await createSession(created.id, organisation.id);
 

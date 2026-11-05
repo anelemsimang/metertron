@@ -76,16 +76,15 @@ export function organizationJsonLd() {
     name: SITE.name,
     url: SITE.url,
     logo: `${SITE.url}/brand/mark.png`,
-    email: SITE.email,
-    contactPoint: [
-      {
-        "@type": "ContactPoint",
-        contactType: "sales",
-        email: SITE.email,
-        areaServed: "ZA",
-        availableLanguage: ["en"],
-      },
-    ],
+    telephone: SITE.phones.map((p) => p.tel),
+    contactPoint: SITE.phones.map((person) => ({
+      "@type": "ContactPoint",
+      contactType: "sales",
+      telephone: person.tel,
+      name: person.name,
+      areaServed: "ZA",
+      availableLanguage: ["en"],
+    })),
   };
 }
 
