@@ -1,0 +1,18 @@
+# Next.js on Netlify — plugin auto-handles SSR/functions.
+# Docs: https://docs.netlify.com/frameworks/next-js/
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Bootstrap vars are ops-only (scripts/bootstrap-platform.ts). They are not needed
+  # at runtime for the web app. Omit them so example/default strings in the repo
+  # do not fail Netlify secrets scanning when those keys are set in the UI.
+  # Prefer removing PLATFORM_BOOTSTRAP_* from the Netlify site env entirely.
+  SECRETS_SCAN_OMIT_KEYS = "PLATFORM_BOOTSTRAP_NAME,PLATFORM_BOOTSTRAP_EMAIL,PLATFORM_BOOTSTRAP_PASSWORD"
+  SECRETS_SCAN_OMIT_PATHS = ".env.example,scripts/bootstrap-platform.ts"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

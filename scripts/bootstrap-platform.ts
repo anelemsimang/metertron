@@ -11,7 +11,7 @@ import { platformStaff } from "../src/server/db/schema";
 async function main() {
   const email = (process.env.PLATFORM_BOOTSTRAP_EMAIL ?? "").trim().toLowerCase();
   const password = process.env.PLATFORM_BOOTSTRAP_PASSWORD ?? "";
-  const name = (process.env.PLATFORM_BOOTSTRAP_NAME ?? "Platform Owner").trim();
+  const name = (process.env.PLATFORM_BOOTSTRAP_NAME ?? "").trim() || email.split("@")[0] || "owner";
   if (!email || !password || password.length < 10) {
     console.error("Set PLATFORM_BOOTSTRAP_EMAIL and PLATFORM_BOOTSTRAP_PASSWORD (≥10 chars).");
     process.exit(1);
