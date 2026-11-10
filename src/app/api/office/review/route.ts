@@ -1,9 +1,10 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
+import { missingRequiredPhotos, photoCoverageLabel } from "@/domain/forms/photo-types";
 import { isOfficeRole } from "@/lib/roles";
 import { dispatchWebhookEvent } from "@/server/api/webhooks";
 import { getSessionUser } from "@/server/auth/session";
 import { getDb, safeDbMessage, withOrg } from "@/server/db/client";
-import { jobs } from "@/server/db/schema";
+import { jobPhotos, jobs } from "@/server/db/schema";
 import { log } from "@/server/observability/log";
 
 const WAITING = ["submitted", "in_review", "resubmitted"] as const;
@@ -30,6 +31,17 @@ export async function POST(request: Request) {
       if (!job) return Response.json({ error: "That capture was not found." }, { status: 404 });
       if (!WAITING.includes(job.status as (typeof WAITING)[number])) {
         return Response.json({ error: "This capture is not waiting for a decision." }, { status: 409 });
+      }
+      if (decision === "approved") {
+        const photos = await db
+          .select({ type: jobPhotos.type })
+          .from(jobPhotos)
+          .where(and(eq(jobPhotos.jobId, jobId), eq(jobPhotos.organisationId, user.organisationId)));
+        const missing = missingRequiredPhotos(photos.map((photo) => photo.type));
+        const label = photoCoverageLabel(missing);
+        if (label) {
+          return Response.json({ error: `Cannot approve yet. Missing photos: ${label}.` }, { status: 409 });
+        }
       }
       await db
         .update(jobs)
